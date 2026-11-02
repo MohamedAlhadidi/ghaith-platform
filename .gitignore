@@ -1,0 +1,29 @@
+# بيانات حساسة ومصادر لا تُرفع
+content/sources/
+data/
+*.pfx
+*.user
+appsettings.*.local.json
+.env
+.env.*
+
+# Node / Vite
+node_modules/
+apps/web/dist/
+apps/web/dev-dist/
+.vite/
+
+# .NET
+bin/
+obj/
+*.swp
+.vs/
+TestResults/
+
+# أدوات
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.log
+Thumbs.db

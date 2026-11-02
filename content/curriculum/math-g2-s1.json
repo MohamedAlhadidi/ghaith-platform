@@ -1,0 +1,72 @@
+{
+  "_تعليق": "خريطة الفصل الدراسي الأول، رياضيات الصف الثاني، مستخرجة بصريًا من كتاب التلميذ (الطبعة الأولى 2020، المواءَم عن سلسلة كامبردج). أرقام الصفحات هي المطبوعة؛ صفحة PDF = المطبوعة + 11.",
+  "subject": "MATH",
+  "grade": "G2",
+  "term": "S1",
+  "editions": [
+    { "code": "OM-2020-ED1", "title": "الطبعة الأولى 1442هـ - 2020م", "verified": true, "source": "https://home.moe.gov.om/ar/manaheg/23/show/4" },
+    { "code": "OM-2026-RP", "title": "نسخة غيث الورقية (طبعة 2026 حسب إفادة ولي الأمر)", "verified": false, "note": "تُؤكد بصورة صفحة الحقوق والفهرس" }
+  ],
+  "units": [
+    {
+      "code": "1A", "titleAr": "الأعداد وحل المشكلات", "strand": "number", "pages": [4, 17],
+      "lessons": [
+        { "code": "L1A-01", "page": 4,  "titleAr": "لوحة المائة",               "coreActivity": "1-2", "coreActivityTitle": "إعداد لوحة المائة",                          "skills": ["MATH.G2.S1.CA01-2"] },
+        { "code": "L1A-02", "page": 5,  "titleAr": "ما بين العقود",             "coreActivity": "1-2", "coreActivityTitle": "إعداد لوحة المائة",                          "skills": ["MATH.G2.S1.CA01-2"] },
+        { "code": "L1A-03", "page": 6,  "titleAr": "كم العدد؟",                 "coreActivity": "2-1", "coreActivityTitle": "العد بالاثنينات والخمسات والعشرات",          "skills": ["MATH.G2.S1.CA02-1"] },
+        { "code": "L1A-04", "page": 7,  "titleAr": "أكياس",                     "coreActivity": "2-1", "coreActivityTitle": "العد بالاثنينات والخمسات والعشرات",          "skills": ["MATH.G2.S1.CA02-1"] },
+        { "code": "L1A-05", "page": 8,  "titleAr": "100 غرام",                  "coreActivity": "3-1", "coreActivityTitle": "أزواج الأعداد حتى 100",                       "skills": ["MATH.G2.S1.CA03-1"] },
+        { "code": "L1A-06", "page": 9,  "titleAr": "مثلث عائلة الحقائق",        "coreActivity": "3-2", "coreActivityTitle": "جمع وطرح أزواج عددية حتى 100",               "skills": ["MATH.G2.S1.CA03-2"] },
+        { "code": "L1A-07", "page": 10, "titleAr": "خط الأعداد",                "coreActivity": "4-1", "coreActivityTitle": "استخدام خط الأعداد",                          "skills": ["MATH.G2.S1.CA04-1"] },
+        { "code": "L1A-08", "page": 11, "titleAr": "تقريب العدد",               "coreActivity": "4-2", "coreActivityTitle": "تقريب الأعداد باستخدام خط الأعداد",           "skills": ["MATH.G2.S1.CA04-2"] },
+        { "code": "L1A-09", "page": 12, "titleAr": "عشرون",                     "coreActivity": "5-1", "coreActivityTitle": "الأزواج العددية لـ20",                         "skills": ["MATH.G2.S1.CA05-1"] },
+        { "code": "L1A-10", "page": 13, "titleAr": "الأزواج العددية في الساعة", "coreActivity": "5-2", "coreActivityTitle": "الأزواج العددية بين 10 و20",                  "skills": ["MATH.G2.S1.CA05-2"] },
+        { "code": "L1A-11", "page": 14, "titleAr": "كم طريقة؟",                 "coreActivity": "6-1", "coreActivityTitle": "الجمع باستخدام الأزواج العددية",              "skills": ["MATH.G2.S1.CA06-1"] },
+        { "code": "L1A-12", "page": 15, "titleAr": "قلوب ونجوم",                "coreActivity": "6-2", "coreActivityTitle": "التحقق من الحل",                              "skills": ["MATH.G2.S1.CA06-2"] },
+        { "code": "L1A-13", "page": 16, "titleAr": "آلة التساوي",               "coreActivity": "6-3", "coreActivityTitle": "المتساوي والمتكافئ",                          "skills": ["MATH.G2.S1.CA06-3"] },
+        { "code": "L1A-14", "page": 17, "titleAr": "المصفوفات",                 "coreActivity": "7-1", "coreActivityTitle": "مقدمة حول المصفوفة",                          "skills": ["MATH.G2.S1.CA07-1"] }
+      ]
+    },
+    {
+      "code": "1B", "titleAr": "الهندسة وحل المشكلات", "strand": "geometry", "pages": [18, 21],
+      "lessons": [
+        { "code": "L1B-01", "page": 18, "titleAr": "الأشكال",          "coreActivity": "8-1", "coreActivityTitle": "الأشكال الثنائية الأبعاد", "skills": ["MATH.G2.S1.CA08-1"] },
+        { "code": "L1B-02", "page": 19, "titleAr": "ابحث عن الأوجه",   "coreActivity": "8-2", "coreActivityTitle": "المجسمات",                 "skills": ["MATH.G2.S1.CA08-2"] },
+        { "code": "L1B-03", "page": 20, "titleAr": "الوردات الورقية",  "coreActivity": "8-3", "coreActivityTitle": "التماثل",                  "skills": ["MATH.G2.S1.CA08-3"] },
+        { "code": "L1B-04", "page": 21, "titleAr": "التماثل",          "coreActivity": "8-3", "coreActivityTitle": "التماثل",                  "skills": ["MATH.G2.S1.CA08-3"] }
+      ]
+    },
+    {
+      "code": "1C", "titleAr": "القياس وحل المشكلات", "strand": "measure", "pages": [22, 30],
+      "lessons": [
+        { "code": "L1C-01", "page": 22, "titleAr": "أي علبة أفضل؟",                 "coreActivity": "9-1",  "coreActivityTitle": "صناعة علبة",          "skills": ["MATH.G2.S1.CA09-1"] },
+        { "code": "L1C-02", "page": 23, "titleAr": "كم الطول؟ كم الارتفاع؟",         "coreActivity": "9-2",  "coreActivityTitle": "قياس المسافة",        "skills": ["MATH.G2.S1.CA09-2"] },
+        { "code": "L1C-03", "page": 24, "titleAr": "الأجسام المتحركة",              "coreActivity": "9-3",  "coreActivityTitle": "صناعة أجسام متحركة",  "skills": ["MATH.G2.S1.CA09-3"] },
+        { "code": "L1C-04", "page": 25, "titleAr": "قياس الوقت",                    "coreActivity": "10-1", "coreActivityTitle": "قياس الوقت",          "skills": ["MATH.G2.S1.CA10-1"] },
+        { "code": "L1C-05", "page": 26, "titleAr": "من الرابح؟",                    "coreActivity": "10-2", "coreActivityTitle": "قياس المسافة",        "skills": ["MATH.G2.S1.CA10-2"] },
+        { "code": "L1C-06", "page": 27, "titleAr": "لأي ارتفاع يمكنك أن تقفز؟",     "coreActivity": "10-3", "coreActivityTitle": "قياس الارتفاع",       "skills": ["MATH.G2.S1.CA10-3"] },
+        { "code": "L1C-07", "page": 28, "titleAr": "صنع البسكويت",                  "coreActivity": "11-1", "coreActivityTitle": "قياس المقادير",       "skills": ["MATH.G2.S1.CA11-1"], "note": "رقم النشاط غير مقروء في الذيل؛ 11-1 استنتاج من الترتيب" },
+        { "code": "L1C-08", "page": 29, "titleAr": "خبز الزنجبيل",                  "coreActivity": "11-2", "coreActivityTitle": "وقت الطهي",           "skills": ["MATH.G2.S1.CA11-2"] },
+        { "code": "L1C-09", "page": 30, "titleAr": "ما الثمن؟",                     "coreActivity": "11-3", "coreActivityTitle": "حساب الثمن",          "skills": ["MATH.G2.S1.CA11-3"] }
+      ]
+    },
+    {
+      "code": "2A", "titleAr": "الأعداد وحل المشكلات", "strand": "number", "pages": [31, 43],
+      "lessons": [
+        { "code": "L2A-01", "page": 31, "titleAr": "عشرات وأكثر",         "coreActivity": "12-1", "coreActivityTitle": "العشرات والآحاد حتى 100",            "skills": ["MATH.G2.S1.CA12-1"] },
+        { "code": "L2A-02", "page": 32, "titleAr": "أكبر من، أصغر من",    "coreActivity": "12-2", "coreActivityTitle": "مقارنة وترتيب الأعداد",              "skills": ["MATH.G2.S1.CA12-2"] },
+        { "code": "L2A-03", "page": 33, "titleAr": "التقدير",             "coreActivity": "13-1", "coreActivityTitle": "التقدير",                            "skills": ["MATH.G2.S1.CA13-1"] },
+        { "code": "L2A-04", "page": 34, "titleAr": "أزواج إلى العشرين",   "coreActivity": "14-1", "coreActivityTitle": "الأزواج العددية لـ20",                "skills": ["MATH.G2.S1.CA14-1"] },
+        { "code": "L2A-05", "page": 35, "titleAr": "خطوط الضعف",          "coreActivity": "14-2", "coreActivityTitle": "الضعف",                              "skills": ["MATH.G2.S1.CA14-2"] },
+        { "code": "L2A-06", "page": 36, "titleAr": "الدخيل",              "coreActivity": "14-3", "coreActivityTitle": "تصنيف الأعداد",                      "skills": ["MATH.G2.S1.CA14-3"] },
+        { "code": "L2A-07", "page": 37, "titleAr": "قصص الأعداد",         "coreActivity": "15-1", "coreActivityTitle": "الأعداد المكونة من رقم أو رقمين",     "skills": ["MATH.G2.S1.CA15-1"] },
+        { "code": "L2A-08", "page": 38, "titleAr": "حلقة الجمع",          "coreActivity": "15-2", "coreActivityTitle": "الأعداد المكونة من رقمين",            "skills": ["MATH.G2.S1.CA15-2"] },
+        { "code": "L2A-09", "page": 39, "titleAr": "الفرق",               "coreActivity": "16-1", "coreActivityTitle": "العثور على الفروقات البسيطة",         "skills": ["MATH.G2.S1.CA16-1"] },
+        { "code": "L2A-10", "page": 40, "titleAr": "أين المصفوفات؟",      "coreActivity": "17-1", "coreActivityTitle": "المصفوفات",                          "skills": ["MATH.G2.S1.CA17-1"] },
+        { "code": "L2A-11", "page": 41, "titleAr": "علب الأحذية",         "coreActivity": "17-2", "coreActivityTitle": "العد بالاثنينات والخمسات والعشرات",   "skills": ["MATH.G2.S1.CA17-2"] },
+        { "code": "L2A-12", "page": 42, "titleAr": "الأيدي ترفع",         "coreActivity": "17-2", "coreActivityTitle": "العد بالاثنينات والخمسات والعشرات",   "skills": ["MATH.G2.S1.CA17-2"], "note": "رقم النشاط غير مقروء في الذيل؛ 17-2 استنتاج من العنوان" },
+        { "code": "L2A-13", "page": 43, "titleAr": "البسكويت",            "coreActivity": "17-3", "coreActivityTitle": "القسمة",                             "skills": ["MATH.G2.S1.CA17-3"] }
+      ]
+    }
+  ]
+}

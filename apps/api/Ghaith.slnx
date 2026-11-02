@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Ghaith.Api/Ghaith.Api.csproj" />
+  <Project Path="Ghaith.Domain/Ghaith.Domain.csproj" />
+  <Project Path="Ghaith.Tests/Ghaith.Tests.csproj" />
+</Solution>

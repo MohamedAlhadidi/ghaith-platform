@@ -1,0 +1,22 @@
+{
+  "title": "مدرستي - غيث",
+  "schoolFolder": "%USERPROFILE%\\Documents\\مدرستي",
+  "edge": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "gcompris": "C:\\Program Files\\GCompris-Qt\\bin\\GCompris.exe",
+  "columns": 4,
+  "rows": 3,
+  "tiles": [
+    { "id": "listen_say",  "label": "أسمع وأقول",        "sound": "اسمع-واقول",       "color": "#2E7D32", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale ar_AR.UTF-8 --launch lang" },
+    { "id": "letters",     "label": "الحروف",             "sound": "الحروف",           "color": "#1565C0", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale ar_AR.UTF-8 --launch click_on_letter" },
+    { "id": "missing",     "label": "الحرف الناقص",       "sound": "الحرف-الناقص",     "color": "#6A1B9A", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale ar_AR.UTF-8 --launch missing-letter" },
+    { "id": "stories",     "label": "القصص",              "sound": "القصص",            "color": "#EF6C00", "kind": "url",    "target": "https://3asafeer.com/", "args": "" },
+    { "id": "plus",        "label": "الجمع",              "sound": "الجمع",            "color": "#00838F", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale ar_AR.UTF-8 --launch algebra_plus" },
+    { "id": "clock",       "label": "الساعة",             "sound": "الساعة",           "color": "#5D4037", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale ar_AR.UTF-8 --launch clockgame" },
+    { "id": "paint",       "label": "ألوّن وأحكي",        "sound": "الون-واحكي",       "color": "#C62828", "kind": "appid",  "target": "Microsoft.Paint_8wekyb3d8bbwe!App", "args": "" },
+    { "id": "record",      "label": "أسجّل صوتي",         "sound": "اسجل-صوتي",        "color": "#AD1457", "kind": "appid",  "target": "Microsoft.WindowsSoundRecorder_8wekyb3d8bbwe!App", "args": "" },
+    { "id": "speech",      "label": "تمارين أستاذ النطق", "sound": "تمارين-النطق",     "color": "#283593", "kind": "speech", "target": "", "args": "" },
+    { "id": "books",       "label": "كتبي",               "sound": "كتبي",             "color": "#4E342E", "kind": "folder", "target": "%SCHOOL%\\الكتب المدرسية", "args": "" },
+    { "id": "english",     "label": "English",            "sound": "english",          "color": "#00695C", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale en_US.UTF-8 --launch click_on_letter" },
+    { "id": "all_games",   "label": "كل الألعاب",         "sound": "كل-الالعاب",       "color": "#455A64", "kind": "exe",    "target": "%GCOMPRIS%", "args": "--locale ar_AR.UTF-8" }
+  ]
+}
