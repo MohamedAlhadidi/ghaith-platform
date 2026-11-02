@@ -1,0 +1,25 @@
+معرف الصوت,النص,اللغة,الاستخدام,الدرس,الصوت المختار,عدد الأحرف,حالة المراجعة
+ui.welcome,أهلًا غيث! هل أنت مستعد؟,ar-OM,ترحيب شاشة البداية,مشترك,ar-OM-AyshaNeural,24,مسودة
+ui.correct,أحسنت!,ar-OM,تغذية راجعة صحيحة,مشترك,ar-OM-AyshaNeural,6,مسودة
+ui.try_again,حاول مرة أخرى.,ar-OM,تغذية راجعة خاطئة,مشترك,ar-OM-AyshaNeural,15,مسودة
+ui.hint,إليك تلميحًا.,ar-OM,قبل التلميح,مشترك,ar-OM-AyshaNeural,13,مسودة
+ui.next,السؤال التالي.,ar-OM,انتقال,مشترك,ar-OM-AyshaNeural,15,مسودة
+ui.guided_intro,سنحل هذه الأسئلة معًا. اضغط على التلميح إذا احتجت مساعدة.,ar-OM,مقدمة مرحلة التوجيه,مشترك,ar-OM-AyshaNeural,58,مسودة
+ui.independent_intro,الآن حل وحدك. أنا هنا إذا احتجت تلميحًا.,ar-OM,مقدمة المرحلة المستقلة,مشترك,ar-OM-AyshaNeural,41,مسودة
+ui.check_intro,أسئلة جديدة لنرى ماذا تعلمت. بلا تلميحات هذه المرة.,ar-OM,مقدمة مرحلة التحقق,مشترك,ar-OM-AyshaNeural,50,مسودة
+ui.session_done,انتهت جلسة اليوم. أحسنت يا غيث! حصلت على نجوم جديدة.,ar-OM,نهاية الجلسة,مشترك,ar-OM-AyshaNeural,52,مسودة
+ui.paper_suggestion,اطلب من بابا أو ماما أن يلعبا معك لعبة البطاقات على الورق.,ar-OM,اقتراح نشاط ورقي,مشترك,ar-OM-AyshaNeural,58,مسودة
+l1a01.model.1,هذه لوحة المائة. فيها الأعداد من واحد إلى مائة، كل صف فيه عشرة أعداد.,ar-OM,شرح,L1A-01,ar-OM-AyshaNeural,71,مسودة
+l1a01.model.2,انظر إلى العدد أربعة وعشرين. تحته مباشرة أربعة وثلاثون. عندما ننزل صفًا واحدًا نزيد عشرة.,ar-OM,شرح,L1A-01,ar-OM-AyshaNeural,93,مسودة
+l1a01.model.3,وعندما نتحرك خانة واحدة في الصف نفسه نزيد واحدًا: بعد ثلاثة وثلاثين يأتي أربعة وثلاثون.,ar-OM,شرح,L1A-01,ar-OM-AyshaNeural,88,مسودة
+l1a01.model.4,الأعداد التي تنتهي بصفر اسمها العقود: عشرة، عشرون، ثلاثون. كل عقد يبدأ صفًا جديدًا.,ar-OM,شرح,L1A-01,ar-OM-AyshaNeural,84,مسودة
+l1a01.model.5,الآن دورك. سنلعب معًا أولًا، ثم تحل وحدك.,ar-OM,شرح,L1A-01,ar-OM-AyshaNeural,41,مسودة
+hs.prompt.missing_cell,ما العدد الناقص في الخانة؟,ar-OM,سؤال ثابت,L1A-01,ar-OM-AyshaNeural,26,مسودة
+hs.hint.missing_cell.3,انظر إلى لوحة المائة كاملة وابحث عن مكان الخانة.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,50,مسودة
+hs.hint.between_decades.2,كل الأعداد في هذا الصف بين العقدين صحيحة.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,41,مسودة
+hs.hint.midpoint.1,المنتصف هو العدد الذي يبعد عن العقدين المسافة نفسها.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,54,مسودة
+hs.hint.midpoint.3,منتصف أي عقدين ينتهي بالرقم خمسة.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,33,مسودة
+hs.hint.locate.2,العدد في هذا الصف.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,19,مسودة
+hs.hint.locate.3,هذه هي الخانة.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,15,مسودة
+hs.hint.ten_more_less.3,عند تغيير عشرة يتغير رقم العشرات فقط.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,38,مسودة
+hs.hint.one_more_less.3,عند تغيير واحد يتغير رقم الآحاد.,ar-OM,تلميح ثابت,L1A-01,ar-OM-AyshaNeural,32,مسودة
