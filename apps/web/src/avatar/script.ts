@@ -11,6 +11,9 @@ export type Situation =
   | 'baseline_ack' // بعد كل إجابة في خط الأساس (محايد)
   | 'baseline_done'
   | 'model_intro' // قبل الشرح
+  | 'warmup_intro' // قبل تمرين القفز
+  | 'move_first' // ضغط "وصلت" بلا حركة
+  | 'idle_hint' // تلميح تلقائي بعد تردد طويل
   | 'worked_intro' // قبل المثال المحلول
   | 'worked_done' // بعد أداء المثال
   | 'guided_intro'
@@ -51,6 +54,9 @@ export const SCRIPT: Record<Situation, Line[]> = {
   ],
   baseline_done: [{ id: 'c.baseline.done', textAr: 'انتهينا. الآن نتعلم معًا.' }],
   model_intro: [{ id: 'c.model.intro', textAr: 'انظر إلى لوحة المائة أولًا.' }],
+  warmup_intro: [{ id: 'c.warmup.intro', textAr: 'أولًا نتدرب على القفز.' }],
+  move_first: [{ id: 'c.movefirst.1', textAr: 'تحرك أولًا، ثم اضغط وصلت.' }],
+  idle_hint: [{ id: 'c.idlehint.1', textAr: 'سأساعدك. انظر إلى الزر.' }],
   worked_intro: [{ id: 'c.worked.intro', textAr: 'شاهد: أنا أحل، وأنت تنظر.' }],
   worked_done: [{ id: 'c.worked.done', textAr: 'رأيت؟ الآن أنت.' }],
   guided_intro: [{ id: 'c.guided.intro', textAr: 'نلعب معًا. التلميح هنا إذا احتجت.' }],

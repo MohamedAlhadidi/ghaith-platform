@@ -14,7 +14,7 @@ export interface SessionInsight {
   evidenceAr: string;
   /** اقتراح عملي على الورق إن وُجد */
   paperAr?: string;
-  kind: 'accuracy' | 'error_pattern' | 'hesitation' | 'hints' | 'representation' | 'fatigue' | 'baseline' | 'adaptation';
+  kind: 'accuracy' | 'error_pattern' | 'hesitation' | 'hints' | 'representation' | 'fatigue' | 'baseline' | 'adaptation' | 'rapid';
 }
 
 export interface SessionSummary {
@@ -88,6 +88,11 @@ export function summarizeSession(sessionId: string, attempts: AttemptEvent[], fi
   }
   if (practice.length > 0 && hesitations > 0) {
     insights.push({ kind: 'hesitation', textAr: `تردد طويلًا في ${ar(hesitations)} أسئلة قبل أي فعل.`, evidenceAr: `أطول تردد ${ar(Math.round(maxHes / 1000))} ثانية، متوسط أول فعل ${ar(Math.round(meanFirst / 1000))} ثوانٍ` });
+  }
+  // إجابات خاطئة في أقل من ثانيتين ونصف: على الأرجح ضغط عشوائي لا محاولة حقيقية، فتُذكر للأب ولا تُفسَّر كخطأ مفهوم
+  const rapid = practice.filter((a) => !a.correct && a.responseMs < 2500).length;
+  if (rapid >= 2) {
+    insights.push({ kind: 'rapid', textAr: `${ar(rapid)} إجابات خاطئة في أقل من ثانيتين: على الأرجح ضغط عشوائي.`, evidenceAr: 'لا تُحتسب كأخطاء مفهوم', paperAr: 'اجلس بجانبه في بداية الجلسة حتى يفهم أن كل سؤال يحتاج نظرة إلى اللوحة أولًا.' });
   }
   const hintsTotal = practice.reduce((s, a) => s + a.hintsUsed, 0);
   if (hintsTotal > 0) {

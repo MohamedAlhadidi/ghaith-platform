@@ -27,7 +27,7 @@ export interface LessonDefinition {
   objectiveAr: string;
   vocabularyAr: string[];
   model: ModelScreen[];
-  counts: { baseline: number; guided: number; independent: number; check: number; maxAttemptsPerQuestion: number };
+  counts: { baseline: number; warmup: number; guided: number; independent: number; check: number; maxAttemptsPerQuestion: number };
   paperActivityAr: string;
 }
 
@@ -52,7 +52,7 @@ export const LESSON_L1A_01: LessonDefinition = {
     { audioId: 'l1a01.model.8', textAr: 'خانة صفراء: العدد ناقص. فوقها أربعة وعشرون.', showAll: false, reveal: [24, 44], hiddenCell: 34, highlight: [24], arrow: { from: 24, to: 34, labelAr: '+١٠' } },
     { audioId: 'l1a01.model.9', textAr: 'الآن نبحث عن الكنز معًا.', showAll: true, highlight: [], avatarAt: 1 },
   ],
-  counts: { baseline: 8, guided: 3, independent: 5, check: 3, maxAttemptsPerQuestion: 3 },
+  counts: { baseline: 8, warmup: 2, guided: 3, independent: 5, check: 3, maxAttemptsPerQuestion: 3 },
   paperActivityAr: 'اطبع لوحة مائة أو ارسمها، وغطِّ خمسة أعداد ببطاقات، واطلب من غيث أن يقول العدد المغطّى قبل أن يرفع البطاقة.',
 };
 

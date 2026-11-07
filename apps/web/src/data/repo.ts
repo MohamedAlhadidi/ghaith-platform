@@ -12,6 +12,8 @@ import {
 } from './db';
 import { assessSkill, DEFAULT_MASTERY_RULES, localDayOf, validateRules, type AttemptEvent, type MasteryRules, type SkillAssessment } from '../engine/mastery';
 import type { SessionSummary } from '../avatar/insights';
+import { computeReadiness } from '../engine/readiness';
+import type { Readiness } from '../engine/hundredSquare';
 
 /** ملف الطفل: ما يضبطه الأب من لوحته */
 export interface ChildProfile {
@@ -137,6 +139,11 @@ export async function attemptsForSession(sessionId: string): Promise<AttemptEven
 export async function assessSkillFromDb(skillCode: string, childId = DEFAULT_CHILD_ID): Promise<SkillAssessment> {
   const [events, rules] = await Promise.all([attemptsForSkill(skillCode, childId), getMasteryRules()]);
   return assessSkill(skillCode, events, rules);
+}
+
+/** مستوى الجاهزية الحالي لكل نوع مُقيَّد من تاريخ محاولات المهارة */
+export async function readinessFromDb(skillCode: string, childId = DEFAULT_CHILD_ID): Promise<Readiness> {
+  return computeReadiness(await attemptsForSkill(skillCode, childId));
 }
 
 /** هل لهذه المهارة خط أساس مسجّل (لتقرير ما إذا كانت الجلسة تبدأ به) */

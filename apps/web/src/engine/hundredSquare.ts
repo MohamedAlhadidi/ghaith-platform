@@ -16,7 +16,8 @@ export type HundredSquareVariant =
   | 'one_more_less' // واحد أكثر/أقل (خطوة)
   | 'between_decades' // أي عدد بين عقدين (إجابات متعددة صحيحة)
   | 'midpoint' // منتصف عقدين
-  | 'locate'; // انقر على موضع العدد
+  | 'locate' // انقر على موضع العدد
+  | 'column_jumps'; // تمرين: عدة قفزات إلى أسفل في العمود نفسه (العدّ بالعشرات)
 
 const ar = toArabicIndic;
 
@@ -169,12 +170,15 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
         ? `${ar(base)} أول الصف. ${ar(expected)} آخر الصف السابق.`
         : null;
 
+  // سلّم التلميحات في وضع الحركة يتدرج: أي زوج من الأزرار؟ ← أي اتجاه؟ ← الكنز هنا. لا يُعطى الجواب في التلميح الأول
+  const pulsePair = step === 10 ? 'jump' : 'step';
+  const pulseExact = step === 10 ? (more ? 'jump_more' : 'jump_less') : more ? 'step_more' : 'step_less';
   const hints: QuestionHint[] =
     mode === 'move'
       ? [
-          { textAr: `اضغط "${moveWord} ${dirWord}" مرة واحدة.`, audioId: '', highlight: [base], arrow },
-          { textAr: boundary ?? `انظر: ${ar(base)} ثم ${ar(expected)}.`, audioId: '', highlight: [base, expected], arrow },
-          { textAr: 'الكنز هنا.', audioId: 'hs.hint.here', highlight: [expected] },
+          { textAr: `${stepWord} ${dirWord} = ${moveWord}. أي زر؟`, audioId: '', highlight: [base], pulse: pulsePair },
+          { textAr: boundary ?? (step === 10 ? `${more ? 'إلى أسفل' : 'إلى أعلى'} = ${dirWord}.` : `خطوة واحدة ${dirWord}.`), audioId: '', highlight: [base, expected], arrow, pulse: pulseExact },
+          { textAr: 'الكنز هنا.', audioId: 'hs.hint.here', highlight: [expected], pulse: pulseExact },
         ]
       : [
           { textAr: `ابحث عن ${ar(base)} في اللوحة.`, audioId: '', highlight: [base], revealSquare: true },
@@ -201,6 +205,52 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
     evaluate(given): Evaluation {
       const tag = classifyStepError(given, expected, ctx);
       return { tag, feedbackAr: stepFeedback(tag, ctx) };
+    },
+  };
+}
+
+/** تمرين القفز: عدة قفزات إلى أسفل في العمود نفسه؛ الهدف أن يرى الطفل أن كل قفزة تزيد عشرة وأن الآحاد لا تتغير */
+function columnJumps(seed: number): GeneratedQuestion {
+  const rng = createRng(seed);
+  const jumps = rng.int(2, 3);
+  const row = rng.int(1, 10 - jumps);
+  const col = rng.int(1, 10);
+  const base = (row - 1) * 10 + col;
+  const expected = base + 10 * jumps;
+  const path = Array.from({ length: jumps + 1 }, (_, i) => base + 10 * i);
+  const jumpsWord = jumps === 2 ? 'مرتين' : 'ثلاث مرات';
+  return {
+    id: makeId('column_jumps', seed, 'move'),
+    skillCode: HUNDRED_SQUARE_SKILL,
+    templateCode: 'HUNDRED_SQUARE',
+    variant: 'column_jumps',
+    seed,
+    representation: 'concrete',
+    promptAr: `أنت على ${ar(base)}. اقفز إلى أسفل ${jumpsWord}.`,
+    promptParts: [
+      { kind: 'text', textAr: 'اضغط' },
+      { kind: 'op', textAr: 'قفزة أكثر' },
+      { kind: 'number', value: jumps, tone: 'start' },
+      { kind: 'text', textAr: jumps === 2 ? 'مرات' : 'مرات' },
+    ],
+    audioId: '',
+    square: square({ showAll: true, start: base, highlight: [] }),
+    inputMode: 'move',
+    matcher: { kind: 'exact', value: expected },
+    hints: [
+      { textAr: 'قفزة أكثر: هذا الزر.', audioId: '', highlight: [base], pulse: 'jump_more' },
+      { textAr: `عدّ القفزات: ${path.slice(1).map(ar).join('، ')}.`, audioId: '', highlight: path, pulse: 'jump_more' },
+      { textAr: 'الكنز هنا.', audioId: 'hs.hint.here', highlight: [expected], pulse: 'jump_more' },
+    ],
+    explainAr: `${path.map(ar).join('، ')}.`,
+    solutionPath: path,
+    evaluate(given): Evaluation {
+      if (given === null) return { tag: 'not_a_number', feedbackAr: GENERIC_FEEDBACK.not_a_number };
+      if (given === expected) return { tag: 'none', feedbackAr: GENERIC_FEEDBACK.none };
+      if (given === base) return { tag: 'off_by_ten', feedbackAr: 'لم تتحرك. اضغط قفزة أكثر.' };
+      if (given < base) return { tag: 'wrong_direction', feedbackAr: 'ذهبت أقل. نريد إلى أسفل.' };
+      if ((given - base) % 10 === 0) return { tag: 'off_by_ten', feedbackAr: 'عدّ القفزات مرة أخرى.' };
+      return { tag: 'confused_step', feedbackAr: 'هذه خطوة. نريد قفزة فقط.' };
     },
   };
 }
@@ -338,7 +388,23 @@ export function generateHundredSquareQuestion(variant: HundredSquareVariant, see
       return midpoint(seed);
     case 'locate':
       return locate(seed);
+    case 'column_jumps':
+      return columnJumps(seed);
   }
+}
+
+/** مستوى التمثيل المسموح لنوع سؤال: محسوس (حركة) ← صوري (كتابة مع اللوحة) ← مجرد (كتابة بلا لوحة) */
+export type ReadinessLevel = 'concrete' | 'pictorial' | 'abstract';
+export type Readiness = Partial<Record<HundredSquareVariant, ReadinessLevel>>;
+
+/** يخفض عنصر المجمع إلى المستوى المسموح به: لا نكتب بلا لوحة قبل أن ننجح بالحركة ثم باللوحة */
+export function gateEntry(entry: PoolEntry, readiness: Readiness): PoolEntry {
+  if (entry.variant !== 'ten_more_less' && entry.variant !== 'one_more_less') return entry;
+  const allowed = readiness[entry.variant] ?? 'concrete';
+  const level: ReadinessLevel = entry.mode === 'move' ? 'concrete' : entry.showSquare ? 'pictorial' : 'abstract';
+  const order: ReadinessLevel[] = ['concrete', 'pictorial', 'abstract'];
+  if (order.indexOf(level) <= order.indexOf(allowed)) return entry;
+  return allowed === 'concrete' ? { ...entry, mode: 'move', showSquare: true } : { ...entry, mode: 'numpad', showSquare: true };
 }
 
 /** عنصر من مجمع الأسئلة: النوع وطريقة الإجابة */
@@ -352,7 +418,11 @@ export interface PoolEntry {
  * مجمعات الأسئلة لكل مرحلة. المخطط يخلطها ببذرة الجلسة ويضمن التغطية عبر الجلسات.
  * خط الأساس: ثمانية أسئلة بلا تلميح تمثّل كل الأنواع.
  */
-export const PHASE_POOLS: Record<'baseline' | 'guided' | 'independent' | 'check', PoolEntry[]> = {
+export const PHASE_POOLS: Record<'baseline' | 'warmup' | 'guided' | 'independent' | 'check', PoolEntry[]> = {
+  warmup: [
+    { variant: 'column_jumps', mode: 'move', showSquare: true },
+    { variant: 'column_jumps', mode: 'move', showSquare: true },
+  ],
   baseline: [
     { variant: 'ten_more_less', mode: 'numpad', showSquare: false },
     { variant: 'ten_more_less', mode: 'numpad', showSquare: false },
@@ -416,6 +486,7 @@ export const VARIANT_LABELS: Record<HundredSquareVariant, string> = {
   between_decades: 'بين عقدين',
   midpoint: 'منتصف عقدين',
   locate: 'موضع العدد',
+  column_jumps: 'تمرين القفز',
 };
 
 /** مطابق الإجابة كنص قابل للقراءة في لوحة الأب */

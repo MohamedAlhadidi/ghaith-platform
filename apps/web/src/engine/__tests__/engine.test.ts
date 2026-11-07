@@ -172,7 +172,7 @@ describe('محرك الإتقان', () => {
 });
 
 describe('مولدات خريطة المائة (1000 بذرة لكل نوع)', () => {
-  const variants: HundredSquareVariant[] = ['missing_cell', 'ten_more_less', 'one_more_less', 'between_decades', 'midpoint', 'locate'];
+  const variants: HundredSquareVariant[] = ['missing_cell', 'ten_more_less', 'one_more_less', 'between_decades', 'midpoint', 'locate', 'column_jumps'];
   const valuesOf = (m: AnswerMatcher) => (m.kind === 'exact' ? [m.value] : m.kind === 'set' ? m.values : [m.min, m.max]);
 
   it('حتمية، والإجابات داخل 1..100، وكل النصوص حتى ثماني كلمات، وحتى ثلاثة تلميحات', () => {

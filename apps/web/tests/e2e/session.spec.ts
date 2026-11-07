@@ -4,11 +4,13 @@
 import { expect, test, type Page } from '@playwright/test';
 import { planSession, replayAdaptations, type AppliedAdaptation, type PlannedQuestion } from '../../src/session/planner';
 import { LESSON_L1A_01 } from '../../src/content/lessons/L1A-01';
+import type { Readiness } from '../../src/engine/hundredSquare';
 
 interface ResumeRow {
   sessionId: string;
   includeBaseline: boolean;
   adaptations: AppliedAdaptation[];
+  readiness?: Readiness;
   stage: { kind: string; index: number };
 }
 
@@ -97,8 +99,8 @@ async function answerCurrent(page: Page, p: PlannedQuestion): Promise<void> {
 async function currentPlan(page: Page): Promise<{ plan: PlannedQuestion[]; resume: ResumeRow }> {
   const resume = (await readResume(page))!;
   expect(resume).toBeTruthy();
-  const base = planSession(LESSON_L1A_01, resume.sessionId, { includeBaseline: resume.includeBaseline });
-  return { plan: replayAdaptations(LESSON_L1A_01, resume.sessionId, base, resume.adaptations), resume };
+  const base = planSession(LESSON_L1A_01, resume.sessionId, { includeBaseline: resume.includeBaseline, readiness: resume.readiness });
+  return { plan: replayAdaptations(LESSON_L1A_01, resume.sessionId, base, resume.adaptations, resume.readiness), resume };
 }
 
 async function startFresh(page: Page): Promise<void> {
@@ -108,7 +110,7 @@ async function startFresh(page: Page): Promise<void> {
   await page.getByTestId('start-session').click();
 }
 
-test('جلسة كاملة بإجابات صحيحة: 19 محاولة ونهاية واحدة، ثم لوحة الأب تعرض الملاحظات', async ({ page }) => {
+test('جلسة كاملة بإجابات صحيحة: 21 محاولة ونهاية واحدة، ثم لوحة الأب تعرض الملاحظات', async ({ page }) => {
   await startFresh(page);
   const stages: string[] = [];
   for (let guard = 0; guard < 80; guard++) {
@@ -132,15 +134,15 @@ test('جلسة كاملة بإجابات صحيحة: 19 محاولة ونهاي�
     throw new Error(`مرحلة غير متوقعة: ${stage}`);
   }
   expect(stages.at(-1)).toBe('end');
-  expect(stages.filter((s) => s === 'question')).toHaveLength(19);
+  expect(stages.filter((s) => s === 'question')).toHaveLength(21);
   expect(stages.filter((s) => s === 'model')).toHaveLength(LESSON_L1A_01.model.length);
-  // 11 نجمة للأسئلة (عدا خط الأساس) + 3 لإكمال الجلسة
-  await expect(page.getByTestId('stars')).toHaveText('★'.repeat(14));
+  // 13 نجمة للأسئلة (عدا خط الأساس) + 3 لإكمال الجلسة
+  await expect(page.getByTestId('stars')).toHaveText('★'.repeat(16));
   await page.screenshot({ path: 'test-results/end.png' });
 
-  expect(await countStore(page, 'attempts')).toBe(19);
+  expect(await countStore(page, 'attempts')).toBe(21);
   expect(await countStore(page, 'attempts', (a) => a.phase === 'baseline')).toBe(8);
-  expect(await countStore(page, 'attempts', (a) => a.correct === true)).toBe(19);
+  expect(await countStore(page, 'attempts', (a) => a.correct === true)).toBe(21);
   expect(await countStore(page, 'sessions', (s) => s.endReason === 'completed')).toBe(1);
   expect(await countStore(page, 'observations')).toBe(1);
   expect(await readResume(page)).toBeUndefined();

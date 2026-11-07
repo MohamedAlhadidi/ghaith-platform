@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { navigate } from '../App';
 import { db, type ObservationRecord, type SessionRecord } from '../data/db';
-import { assessSkillFromDb, describeStorage, exportAll, getMasteryRules, getProfile, getSetting, importAll, listObservations, purgeProgress, saveProfile, setSetting, type ChildProfile, DEFAULT_PROFILE } from '../data/repo';
-import { HUNDRED_SQUARE_SKILL, VARIANT_LABELS, type HundredSquareVariant } from '../engine/hundredSquare';
+import { assessSkillFromDb, describeStorage, exportAll, getMasteryRules, getProfile, getSetting, importAll, listObservations, purgeProgress, readinessFromDb, saveProfile, setSetting, type ChildProfile, DEFAULT_PROFILE } from '../data/repo';
+import { HUNDRED_SQUARE_SKILL, VARIANT_LABELS, type HundredSquareVariant, type Readiness } from '../engine/hundredSquare';
+import { READINESS_LABELS } from '../engine/readiness';
 import { SKILL_STATE_LABELS, validateRules, type AttemptEvent, type MasteryRules, type SkillAssessment } from '../engine/mastery';
 import { ERROR_TAG_LABELS, ERROR_TAG_MEANING, type ErrorTag } from '../engine/errors';
 import { toArabicIndic } from '../engine/answers';
@@ -18,7 +19,7 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-const PHASE_AR = { baseline: 'خط أساس', guided: 'توجيه', independent: 'وحدك', check: 'تحقق', review: 'مراجعة' } as const;
+const PHASE_AR = { baseline: 'خط أساس', warmup: 'تمرين', guided: 'توجيه', independent: 'وحدك', check: 'تحقق', review: 'مراجعة' } as const;
 const MODE_AR = { numpad: 'كتابة', cell: 'نقر', move: 'حركة' } as const;
 const REP_AR = { concrete: 'حركة', pictorial: 'خريطة', abstract: 'بلا لوحة' } as const;
 const END_AR: Record<NonNullable<SessionRecord['endReason']>, string> = { completed: 'اكتملت', stopped: 'توقفت', killed: 'انقطعت', abandoned: 'تُركت' };
@@ -40,9 +41,10 @@ export function ParentScreen() {
   const [profile, setProfile] = useState<ChildProfile>(DEFAULT_PROFILE);
   const [storage, setStorage] = useState('');
   const [lastBackup, setLastBackup] = useState<number | null>(null);
+  const [readiness, setReadiness] = useState<Readiness>({});
 
   const load = async () => {
-    const [a, list, all, s, r, p, obs, st, lb] = await Promise.all([
+    const [a, list, all, s, r, p, obs, st, lb, rd] = await Promise.all([
       assessSkillFromDb(HUNDRED_SQUARE_SKILL),
       db.attempts.orderBy('clientTs').reverse().limit(40).toArray(),
       db.attempts.toArray(),
@@ -52,6 +54,7 @@ export function ParentScreen() {
       listObservations(6),
       describeStorage(),
       getSetting<number | null>('lastBackupAt', null),
+      readinessFromDb(HUNDRED_SQUARE_SKILL),
     ]);
     setAssessment(a);
     setAttempts(list);
@@ -63,6 +66,7 @@ export function ParentScreen() {
     setObservations(obs);
     setStorage(st);
     setLastBackup(lb);
+    setReadiness(rd);
   };
 
   useEffect(() => {
@@ -185,6 +189,10 @@ export function ParentScreen() {
             المحتسبة: {ar(assessment.stats.counted)} | نظيفة (من الأولى بلا تلميح): {ar(assessment.stats.cleanCorrect)} | صحيحة في النهاية: {ar(assessment.stats.eventuallyCorrect)} | التمثيلات: {ar(assessment.stats.representations)} | الأيام: {ar(assessment.stats.days)} | خط الأساس: {ar(assessment.stats.baselineCorrect)} من {ar(assessment.stats.baselineAttempts)}
           </p>
           {progress && <p><strong>{progress.textAr}</strong> <span style={{ color: 'var(--muted)' }}>({progress.evidenceAr})</span></p>}
+          <p>
+            المستوى الحالي (من بياناته): عشرة أكثر/أقل <strong>{READINESS_LABELS[readiness.ten_more_less ?? 'concrete']}</strong>، واحد أكثر/أقل <strong>{READINESS_LABELS[readiness.one_more_less ?? 'concrete']}</strong>
+            <span style={{ color: 'var(--muted)' }}> — يصعد مستوى بعد ٤ إجابات نظيفة من آخر ٥، ويهبط بعد ٣ أخطاء من آخر ٥.</span>
+          </p>
           <p style={{ color: 'var(--muted)' }}>الحالات قرارات تشغيلية قابلة للتعديل في القواعد أدناه، وليست تشخيصًا.</p>
         </div>
       )}

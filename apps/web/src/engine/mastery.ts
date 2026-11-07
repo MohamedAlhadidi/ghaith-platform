@@ -21,7 +21,7 @@ export const SKILL_STATE_LABELS: Record<SkillState, string> = {
 };
 
 export type RepresentationType = 'concrete' | 'pictorial' | 'abstract';
-export type AttemptPhase = 'baseline' | 'guided' | 'independent' | 'check' | 'review';
+export type AttemptPhase = 'baseline' | 'warmup' | 'guided' | 'independent' | 'check' | 'review';
 export type AttemptSource = 'app' | 'parent_obs' | 'paper';
 
 /** حدث محاولة واحد كما يُخزَّن (إلحاق فقط، لا يُعدَّل) */

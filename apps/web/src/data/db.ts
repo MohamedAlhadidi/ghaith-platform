@@ -3,6 +3,7 @@ import Dexie, { type EntityTable } from 'dexie';
 import type { AttemptEvent } from '../engine/mastery';
 import type { SessionSummary } from '../avatar/insights';
 import type { AppliedAdaptation } from '../session/planner';
+import type { Readiness } from '../engine/hundredSquare';
 
 export interface SessionRecord {
   id: string; // ULID
@@ -63,6 +64,8 @@ export interface ResumeState {
   stage: { kind: 'model' | 'question'; index: number };
   earned: number;
   adaptations: AppliedAdaptation[];
+  /** مستوى الجاهزية الذي بُنيت به الخطة (ليُعاد بناؤها بالشكل نفسه) */
+  readiness?: Readiness;
   savedAt: number;
 }
 

@@ -34,6 +34,8 @@ export interface QuestionHint {
   revealSquare?: boolean;
   /** سهم اتجاه من خانة إلى خانة */
   arrow?: { from: number; to: number; labelAr: string };
+  /** أزرار الحركة التي تنبض مع هذا التلميح (الزوج أو الزر المحدد) */
+  pulse?: 'jump' | 'step' | 'jump_more' | 'jump_less' | 'step_more' | 'step_less';
 }
 
 export interface Evaluation {

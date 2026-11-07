@@ -6,11 +6,14 @@ import { LESSON_L1A_01, type LessonDefinition } from '../content/lessons/L1A-01'
 import { applyAdaptation, planSession, replayAdaptations, shortcutForTime, type AppliedAdaptation, type PlannedQuestion } from '../session/planner';
 import { matchAnswer, parseIntegerAnswer, toArabicIndic } from '../engine/answers';
 import type { ErrorTag } from '../engine/errors';
+import type { QuestionHint } from '../engine/question';
+import type { Readiness } from '../engine/hundredSquare';
 import {
   attemptsForSession,
   endSession,
   getProfile,
   hasBaseline,
+  readinessFromDb,
   heartbeat,
   loadResume,
   recordAttempt,
@@ -49,8 +52,14 @@ type Stage =
   | { kind: 'paused' }
   | { kind: 'end'; short: boolean };
 
-const PHASE_LABEL = { baseline: 'وحدك أولًا', guided: 'نلعب معًا', independent: 'وحدك', check: 'أسئلة جديدة' } as const;
-const PHASE_INTRO: Record<PlannedQuestion['phase'], Situation> = { baseline: 'baseline_intro', guided: 'guided_intro', independent: 'independent_intro', check: 'check_intro' };
+const PHASE_LABEL = { baseline: 'وحدك أولًا', warmup: 'تمرين القفز', guided: 'نلعب معًا', independent: 'وحدك', check: 'أسئلة جديدة' } as const;
+const PHASE_INTRO: Record<PlannedQuestion['phase'], Situation> = { baseline: 'baseline_intro', warmup: 'warmup_intro', guided: 'guided_intro', independent: 'independent_intro', check: 'check_intro' };
+/** بعد اقتراح التلميح: إن استمر التردد هذه المدة يُعطى التلميح الأول تلقائيًا (الترددات المسجّلة وصلت إلى 273 ثانية) */
+const IDLE_AUTO_HINT_MS = 40000;
+/** زر "لا أعرف" لا يعمل قبل هذه المدة حتى لا يُضغط عشوائيًا */
+const SKIP_DELAY_MS = 6000;
+/** الحد الأقصى بعد تجاوز وقت الجلسة في مرحلة التحقق */
+const CHECK_GRACE_MS = 5 * 60000;
 
 interface Bubble {
   text: string;
@@ -83,10 +92,12 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
   const [path, setPath] = useState<number[]>([]);
   const [busy, setBusy] = useState(false); // أثناء المثال المحلول لا يُقبل إدخال
   const [hintPulse, setHintPulse] = useState(false);
+  const [movePulse, setMovePulse] = useState<QuestionHint['pulse']>();
+  const [skipReady, setSkipReady] = useState(false);
   const [overTime, setOverTime] = useState(false);
 
   // مراجع ثابتة لتجنب الإغلاقات القديمة في المؤقتات
-  const sessionRef = useRef<{ id: string; startedAt: number; includeBaseline: boolean } | null>(null);
+  const sessionRef = useRef<{ id: string; startedAt: number; includeBaseline: boolean; readiness: Readiness } | null>(null);
   const planRef = useRef<PlannedQuestion[]>([]);
   const stageRef = useRef<Stage>({ kind: 'loading' });
   const profileRef = useRef<ChildProfile | null>(null);
@@ -138,7 +149,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     const ses = sessionRef.current;
     if (!ses || !lesson) return;
     if (s.kind !== 'model' && s.kind !== 'question') return;
-    void saveResume({ sessionId: ses.id, lessonCode: lesson.code, includeBaseline: ses.includeBaseline, stage: { kind: s.kind, index: s.index }, earned: earnedRef.current, adaptations: adaptationsRef.current });
+    void saveResume({ sessionId: ses.id, lessonCode: lesson.code, includeBaseline: ses.includeBaseline, readiness: ses.readiness, stage: { kind: s.kind, index: s.index }, earned: earnedRef.current, adaptations: adaptationsRef.current });
   }, [lesson]);
 
   const go = useCallback(
@@ -163,9 +174,10 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       const resume = await loadResume();
       if (cancelled) return;
       if (resume && resume.lessonCode === lesson.code) {
-        sessionRef.current = { id: resume.sessionId, startedAt: Date.now(), includeBaseline: resume.includeBaseline };
+        const readiness = resume.readiness ?? {};
+        sessionRef.current = { id: resume.sessionId, startedAt: Date.now(), includeBaseline: resume.includeBaseline, readiness };
         adaptationsRef.current = resume.adaptations;
-        const rebuilt = replayAdaptations(lesson, resume.sessionId, planSession(lesson, resume.sessionId, { includeBaseline: resume.includeBaseline }), resume.adaptations);
+        const rebuilt = replayAdaptations(lesson, resume.sessionId, planSession(lesson, resume.sessionId, { includeBaseline: resume.includeBaseline, readiness }), resume.adaptations, readiness);
         setPlan(rebuilt);
         setEarned(resume.earned);
         earnedRef.current = resume.earned;
@@ -176,14 +188,14 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         setStage(resume.stage.kind === 'model' ? { kind: 'model', index: resume.stage.index } : { kind: 'question', index: resume.stage.index });
         return;
       }
-      const [base, since] = await Promise.all([hasBaseline(lesson.skillCode), sessionsSinceBaseline(lesson.skillCode)]);
+      const [base, since, readiness] = await Promise.all([hasBaseline(lesson.skillCode), sessionsSinceBaseline(lesson.skillCode), readinessFromDb(lesson.skillCode)]);
       const includeBaseline = !base || since >= 5;
       const s = await startSession(lesson.code);
       if (cancelled) return;
-      sessionRef.current = { id: s.id, startedAt: s.startedAt, includeBaseline };
+      sessionRef.current = { id: s.id, startedAt: s.startedAt, includeBaseline, readiness };
       adaptationsRef.current = [];
       recentRef.current = [];
-      setPlan(planSession(lesson, s.id, { includeBaseline }));
+      setPlan(planSession(lesson, s.id, { includeBaseline, readiness }));
       setStage(p.avatarLook ? { kind: 'welcome' } : { kind: 'pick_avatar' });
     })();
     return () => {
@@ -210,6 +222,8 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     setHintLevel(0);
     setExtraHighlight([]);
     setArrow(undefined);
+    setMovePulse(undefined);
+    setSkipReady(false);
     setRevealSquare(false);
     setFeedback(null);
     setMarked(undefined);
@@ -237,6 +251,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       setHintPulse(false);
       if (hint.highlight) setExtraHighlight(hint.highlight);
       if (hint.arrow) setArrow(hint.arrow);
+      setMovePulse(hint.pulse);
       if (hint.revealSquare) setRevealSquare(true);
       void speakText(hint.textAr, hint.audioId, 'think');
     },
@@ -334,10 +349,18 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
-  // اكتشاف التردد: بلا فعل لمدة محددة في المراحل التي يُسمح فيها بالتلميح
+  // زر "لا أعرف" يُفعَّل بعد مهلة قصيرة حتى لا يُضغط عشوائيًا (خط الأساس الأول تخطّاه في 30 ثانية)
+  useEffect(() => {
+    if (stage.kind !== 'question' || !current || current.feedback === 'immediate') return;
+    const t = window.setTimeout(() => setSkipReady(true), SKIP_DELAY_MS);
+    return () => window.clearTimeout(t);
+  }, [stage, current]);
+
+  // اكتشاف التردد: بلا فعل لمدة محددة في المراحل التي يُسمح فيها بالتلميح؛ وإن استمر التردد يُعطى التلميح الأول تلقائيًا
   useEffect(() => {
     if (stage.kind !== 'question' || !current || locked || busy) return;
     if (!current.hintsAllowed) return;
+    let autoGiven = false;
     const t = window.setInterval(() => {
       const obs = observerRef.current;
       if (obs.shouldSuggestHint(DEFAULT_ADAPT_RULES.hesitationMs)) {
@@ -345,10 +368,14 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         setHintPulse(true);
         void speak('hesitation', 'think', String(current.index));
         void recordSessionEvent(sessionRef.current?.id ?? '', 'hesitation', current.question.id);
+      } else if (!autoGiven && hintLevel === 0 && obs.idleMs() >= DEFAULT_ADAPT_RULES.hesitationMs + IDLE_AUTO_HINT_MS) {
+        autoGiven = true;
+        void recordSessionEvent(sessionRef.current?.id ?? '', 'hesitation', `${current.question.id}:auto_hint`);
+        void speak('idle_hint', 'think').then(() => applyHint(current, 1));
       }
     }, 1000);
     return () => window.clearInterval(t);
-  }, [stage, current, locked, busy, speak]);
+  }, [stage, current, locked, busy, speak, hintLevel, applyHint]);
 
   const squareView = useMemo(() => {
     if (!current?.question.square) return undefined;
@@ -398,8 +425,9 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       go({ kind: 'model', index: 0 });
       return;
     }
-    if (next >= p.length) {
-      void finish('completed', overTimeRef.current);
+    // في التحقق: بعد تجاوز الوقت بخمس دقائق تُنهى الجلسة مختصرة (الجلستان المسجّلتان امتدتا إلى 15 و18 دقيقة)
+    if (next >= p.length || (cur.phase === 'check' && elapsed > lim + CHECK_GRACE_MS)) {
+      void finish('completed', overTimeRef.current || elapsed > lim + CHECK_GRACE_MS);
       return;
     }
     if (next > s.index + 1) next = Math.min(next, p.length - 1);
@@ -451,7 +479,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
             pendingStopRef.current = decision.reasonAr;
           } else {
             const applied: AppliedAdaptation = { atIndex: q.index + 1, kind: decision.kind, reasonAr: decision.reasonAr };
-            const nextPlan = applyAdaptation(lesson, ses.id, planRef.current, applied);
+            const nextPlan = applyAdaptation(lesson, ses.id, planRef.current, applied, ses.readiness);
             if (nextPlan !== planRef.current) {
               adaptationsRef.current = [...adaptationsRef.current, applied];
               planRef.current = nextPlan;
@@ -706,7 +734,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         <GhaithAvatar look={look} size={160} state="happy" />
         <h1 className="title">{stage.short ? `حسنًا يا ${name}` : `أحسنت يا ${name}!`}</h1>
         <Companion textAr={bubble.text} mood="cheer" onReplay={replay} />
-        <div className="stars" data-testid="stars">{'★'.repeat(Math.min(earned, 14))}</div>
+        <div className="stars" data-testid="stars">{'★'.repeat(Math.min(earned, 20))}</div>
         <p className="subtitle">نجوم اليوم: {toArabicIndic(earned)}</p>
         {checkResults.length > 0 && (
           <div className="check-results" dir="rtl">
@@ -755,12 +783,25 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
           </div>
           <div className={`feedback ${feedback ? (feedback.ok === true ? 'ok' : feedback.ok === false ? 'bad' : '') : ''}`} aria-live="assertive" data-testid="feedback">{feedback?.text ?? ''}</div>
           {mode === 'numpad' && <NumberPad resetKey={q.id} disabled={locked || busy} onSubmit={(v) => void answer(v)} onAction={() => observerRef.current.action()} />}
-          {mode === 'move' && <MoveControls position={position} disabled={locked || busy} onMove={move} onArrive={() => void answer(position)} />}
+          {mode === 'move' && (
+            <MoveControls
+              position={position}
+              start={q.square?.start ?? position}
+              disabled={locked || busy}
+              pulse={movePulse}
+              onMove={move}
+              onArrive={() => void answer(position)}
+              onArriveWithoutMove={() => {
+                observerRef.current.action();
+                void speak('move_first', 'think');
+              }}
+            />
+          )}
           {mode === 'cell' && <p className="subtitle">انقر على الخانة في اللوحة.</p>}
           {current!.feedback !== 'immediate' && !locked && (
             <div className="button-row">
               {/* في خط الأساس والتحقق: "لا أعرف" أصدق من التخمين، ويُسجَّل بوسم خاص */}
-              <button type="button" className="big-button secondary small" onClick={() => void skip()} data-testid="skip">لا أعرف</button>
+              <button type="button" className="big-button secondary small" disabled={!skipReady} onClick={() => void skip()} data-testid="skip">لا أعرف</button>
             </div>
           )}
           {locked && (
