@@ -648,7 +648,8 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
   if (stage.kind === 'welcome') {
     return (
       <main className="screen screen-center" data-stage="welcome">
-        <GhaithAvatar look={look} size={160} state="happy" />
+        <div className="hero-card">
+        <GhaithAvatar look={look} size={170} state="happy" />
         <h1 className="title">{name}</h1>
         <Companion textAr={bubble.text} mood={bubble.mood} onReplay={replay} />
         <div className="button-row">
@@ -657,6 +658,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
           </button>
           <button type="button" className="big-button secondary" onClick={() => navigate('/')}>رجوع</button>
         </div>
+        </div>
       </main>
     );
   }
@@ -664,10 +666,12 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
   if (stage.kind === 'paused') {
     return (
       <main className="screen screen-center" data-stage="paused">
-        <GhaithAvatar look={look} size={140} state="idle" />
+        <div className="hero-card">
+        <GhaithAvatar look={look} size={150} state="idle" />
         <Companion textAr={bubble.text} mood="talk" />
         <div className="button-row">
           <button type="button" className="big-button" onClick={() => navigate('/')} autoFocus>رجوع</button>
+        </div>
         </div>
       </main>
     );
@@ -676,7 +680,8 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
   if (stage.kind === 'stop_prompt') {
     return (
       <main className="screen screen-center" data-stage="stop_prompt">
-        <GhaithAvatar look={look} size={140} state="think" />
+        <div className="hero-card">
+        <GhaithAvatar look={look} size={150} state="think" />
         <Companion textAr={bubble.text} mood="think" onReplay={replay} />
         <div className="button-row">
           <button type="button" className="big-button" autoFocus onClick={() => void finish('stopped', true)}>نكمل غدًا</button>
@@ -691,6 +696,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
           >
             أكمل الآن
           </button>
+        </div>
         </div>
       </main>
     );
@@ -731,7 +737,8 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     const checkResults = recentRef.current.filter((r) => r.phase === 'check');
     return (
       <main className="screen screen-center" data-stage="end">
-        <GhaithAvatar look={look} size={160} state="happy" />
+        <div className="hero-card">
+        <GhaithAvatar look={look} size={170} state="happy" />
         <h1 className="title">{stage.short ? `حسنًا يا ${name}` : `أحسنت يا ${name}!`}</h1>
         <Companion textAr={bubble.text} mood="cheer" onReplay={replay} />
         <div className="stars" data-testid="stars">{'★'.repeat(Math.min(earned, 20))}</div>
@@ -748,6 +755,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         <p className="note">{lesson.paperActivityAr}</p>
         <div className="button-row">
           <button type="button" className="big-button" onClick={() => navigate('/')} autoFocus data-testid="done">انتهيت</button>
+        </div>
         </div>
       </main>
     );

@@ -38,7 +38,8 @@ export function StartScreen() {
 
   return (
     <main className="screen screen-center" data-stage="start">
-      <GhaithAvatar look={profile.avatarLook ?? 'explorer'} size={150} state="idle" />
+      <div className="hero-card">
+      <GhaithAvatar look={profile.avatarLook ?? 'explorer'} size={170} state="idle" />
       <h1 className="title">{profile.name}</h1>
       <Companion textAr={welcome} mood="talk" onReplay={() => void say(welcome)} />
       <p className="subtitle">لعبة اليوم: {LESSON_L1A_01.gameTitleAr}</p>
@@ -49,6 +50,7 @@ export function StartScreen() {
         <button type="button" className="big-button" onClick={start} autoFocus data-testid="start">
           {resumable ? 'نكمل' : 'ابدأ'}
         </button>
+      </div>
       </div>
       <div className="button-row">
         <button type="button" className="small-link" onClick={() => navigate('/parent')}>
