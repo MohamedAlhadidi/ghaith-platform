@@ -41,6 +41,8 @@ import { seedFromString } from '../engine/rng';
 import { DEFAULT_CHILD_ID } from '../data/db';
 
 const LESSONS: Record<string, LessonDefinition> = { 'L1A-01': LESSON_L1A_01 };
+/** آخر مرة سُجّل فيها حدث استئناف (على مستوى الوحدة حتى لا يتكرر مع كل إعادة تركيب) */
+let lastResumeLogAt = 0;
 
 type Stage =
   | { kind: 'loading' }
@@ -183,7 +185,11 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         earnedRef.current = resume.earned;
         const prior = await attemptsForSession(resume.sessionId);
         recentRef.current = prior.map((a) => ({ phase: a.phase, correct: a.correct, firstTryCorrect: a.firstTryCorrect, hintsUsed: a.hintsUsed, errorTag: a.errorTag, firstResponseMs: a.firstResponseMs, representation: a.representation }));
-        void recordSessionEvent(resume.sessionId, 'resume');
+        // إعادة التركيب السريعة (تحديث أو تنقل) لا تُسجَّل كاستئناف جديد؛ الاستئناف الحقيقي يبعد ثوانٍ على الأقل
+        if (Date.now() - lastResumeLogAt > 10000) {
+          lastResumeLogAt = Date.now();
+          void recordSessionEvent(resume.sessionId, 'resume');
+        }
         pendingLineRef.current = 'resume';
         setStage(resume.stage.kind === 'model' ? { kind: 'model', index: resume.stage.index } : { kind: 'question', index: resume.stage.index });
         return;
@@ -592,15 +598,18 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     (delta: 10 | -10 | 1 | -1) => {
       if (locked || busy) return;
       observerRef.current.action();
-      setPosition((p) => {
-        const n = p + delta;
-        setAvatarAt(n);
-        return n;
-      });
+      const landed = position + delta;
+      setPosition(landed);
+      setAvatarAt(landed);
       setAvatarState('walk');
       after(350, () => setAvatarState('idle'));
+      // في تمرين القفز يُربط اسم العملية بالعدد الذي وصل إليه بصوت ونص: "عشرة أكثر: تسعة وثلاثون"
+      if (current?.question.variant === 'column_jumps') {
+        const opName = delta === 10 ? 'عشرة أكثر' : delta === -10 ? 'عشرة أقل' : delta === 1 ? 'واحد أكثر' : 'واحد أقل';
+        void speakText(`${opName}: ${toArabicIndic(landed)}`, '', 'talk');
+      }
     },
-    [after, busy, locked],
+    [after, busy, current, locked, position, speakText],
   );
 
   const pause = useCallback(() => {
