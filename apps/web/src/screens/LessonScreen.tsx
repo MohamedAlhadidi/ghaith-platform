@@ -26,7 +26,9 @@ import {
   startSession,
   type ChildProfile,
 } from '../data/repo';
-import { say, setVoiceEnabled, stopAudio } from '../audio/audio';
+import { say, sayParts, setVoiceEnabled, stopAudio } from '../audio/audio';
+import { playSfx, setSfxEnabled } from '../audio/sfx';
+import { PHRASES, num } from '../audio/phrases';
 import { HundredSquare } from '../ui/HundredSquare';
 import { NumberPad } from '../ui/NumberPad';
 import { MoveControls } from '../ui/MoveControls';
@@ -66,6 +68,8 @@ const CHECK_GRACE_MS = 5 * 60000;
 interface Bubble {
   text: string;
   audioId: string;
+  /** مقاطع مركّبة إن كان النص يحوي أعدادًا */
+  parts?: string[];
   mood: CompanionMood;
 }
 
@@ -147,6 +151,12 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     return say(text, audioId);
   }, []);
 
+  /** نطق نص مركّب من مقاطع مسجّلة (الأسئلة والتلميحات التي تحوي أعدادًا) */
+  const speakParts = useCallback((text: string, parts: string[] | undefined, audioId = '', mood: CompanionMood = 'talk') => {
+    setBubble({ text, audioId, parts, mood });
+    return parts && parts.length > 0 ? sayParts(parts, text) : say(text, audioId);
+  }, []);
+
   const persistResume = useCallback((s: Stage) => {
     const ses = sessionRef.current;
     if (!ses || !lesson) return;
@@ -171,6 +181,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     (async () => {
       const p = await getProfile();
       setVoiceEnabled(p.voiceEnabled);
+      setSfxEnabled(p.sfxEnabled);
       if (cancelled) return;
       setProfile(p);
       const resume = await loadResume();
@@ -259,7 +270,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       if (hint.arrow) setArrow(hint.arrow);
       setMovePulse(hint.pulse);
       if (hint.revealSquare) setRevealSquare(true);
-      void speakText(hint.textAr, hint.audioId, 'think');
+      void speakParts(hint.textAr, hint.audioParts ?? (hint.audioId ? [hint.audioId] : undefined), hint.audioId, 'think');
     },
     [speakText],
   );
@@ -331,7 +342,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       const q = current.question;
       const sayPrompt = () => {
         if (gen !== questionGenRef.current) return;
-        void speakText(q.promptAr, q.audioId, 'talk').then(() => {
+        void speakParts(q.promptAr, q.audioParts, q.audioId, 'talk').then(() => {
           if (gen !== questionGenRef.current) return;
           if (current.support === 'hint1' && current.hintsAllowed) after(600, () => gen === questionGenRef.current && applyHint(current, 1));
         });
@@ -346,6 +357,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       if (intro) void speak(intro).then(() => gen === questionGenRef.current && start());
       else start();
     } else if (stage.kind === 'end') {
+      playSfx('star');
       void speak(stage.short ? 'end_short' : 'end', 'cheer');
     } else if (stage.kind === 'paused') {
       void speak('paused');
@@ -532,6 +544,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         setLocked(true);
         setFeedback({ text: evaluation.feedbackAr, ok: true });
         setAvatarState('happy');
+        playSfx('treasure');
         if (expected !== undefined) {
           setTreasureAt(expected);
           setAvatarAt(expected);
@@ -555,13 +568,15 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
           setTreasureAt(expected);
           setAvatarAt(expected);
         }
-        void speak('wrong_show', 'talk').then(() => say(q.explainAr));
+        playSfx('wrong');
+        void speak('wrong_show', 'talk').then(() => speakParts(q.explainAr, q.explainParts, '', 'talk'));
         await recordFinal(current, false, result.canonical, tries, hintLevel);
         return;
       }
       setFeedback({ text: evaluation.feedbackAr, ok: false });
       setAvatarState('think');
-      void speakText(evaluation.feedbackAr, '', 'think');
+      playSfx('wrong');
+      void speakText(evaluation.feedbackAr, evaluation.audioId, 'think');
     },
     [advance, after, attempts, busy, current, hintLevel, lesson, locked, recordFinal, speak, speakText],
   );
@@ -591,7 +606,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
 
   const replay = useCallback(() => {
     observerRef.current.replay();
-    void say(bubble.text, bubble.audioId);
+    void (bubble.parts && bubble.parts.length > 0 ? sayParts(bubble.parts, bubble.text) : say(bubble.text, bubble.audioId));
   }, [bubble]);
 
   const move = useCallback(
@@ -602,14 +617,15 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       setPosition(landed);
       setAvatarAt(landed);
       setAvatarState('walk');
+      playSfx(Math.abs(delta) === 10 ? 'jump' : 'step');
       after(350, () => setAvatarState('idle'));
       // في تمرين القفز يُربط اسم العملية بالعدد الذي وصل إليه بصوت ونص: "عشرة أكثر: تسعة وثلاثون"
       if (current?.question.variant === 'column_jumps') {
-        const opName = delta === 10 ? 'عشرة أكثر' : delta === -10 ? 'عشرة أقل' : delta === 1 ? 'واحد أكثر' : 'واحد أقل';
-        void speakText(`${opName}: ${toArabicIndic(landed)}`, '', 'talk');
+        const opKey = delta === 10 ? 'ten_more' : delta === -10 ? 'ten_less' : delta === 1 ? 'one_more' : 'one_less';
+        void speakParts(`${PHRASES[`op.${opKey}`]}: ${toArabicIndic(landed)}`, [`op.${opKey}`, num(landed)], '', 'talk');
       }
     },
-    [after, busy, current, locked, position, speakText],
+    [after, busy, current, locked, position, speakParts],
   );
 
   const pause = useCallback(() => {

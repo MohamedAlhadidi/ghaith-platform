@@ -29,6 +29,8 @@ export interface QuestionHint {
   /** جملة قصيرة (حتى ثماني كلمات) يقولها الرفيق */
   textAr: string;
   audioId: string;
+  /** مقاطع صوتية مركّبة بالترتيب (بديل عن audioId للنصوص التي تحوي أعدادًا) */
+  audioParts?: string[];
   highlight?: number[];
   /** يكشف اللوحة كاملة إن كانت مخفية */
   revealSquare?: boolean;
@@ -42,6 +44,8 @@ export interface Evaluation {
   tag: ErrorTag;
   /** جملة قصيرة للطفل */
   feedbackAr: string;
+  /** معرّف المقطع الصوتي للجملة */
+  audioId: string;
 }
 
 /**
@@ -66,6 +70,8 @@ export interface GeneratedQuestion {
   promptParts: PromptPart[];
   /** معرّف ملف الصوت المقابل للنص؛ فارغ إن كان النص متغيرًا */
   audioId: string;
+  /** مقاطع صوتية مركّبة بالترتيب تنطق السؤال (كلمات ثابتة وأعداد) */
+  audioParts: string[];
   square?: SquareView;
   inputMode: InputMode;
   matcher: AnswerMatcher;
@@ -73,6 +79,7 @@ export interface GeneratedQuestion {
   hints: QuestionHint[];
   /** شرح قصير يُعرض بعد استنفاد المحاولات */
   explainAr: string;
+  explainParts: string[];
   /** المسار الذي يسلكه الأفاتار في المثال المحلول (خانات متتالية) */
   solutionPath: number[];
   /** تصنيف الإجابة وجملة التغذية الراجعة */

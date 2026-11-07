@@ -106,6 +106,35 @@ export async function sayAll(lines: Array<{ text: string; audioId?: string }>, g
   }
 }
 
+/**
+ * ينطق جملة مركّبة من مقاطع مسجّلة بالترتيب (كلمات ثابتة وأعداد) بفاصل قصير بينها.
+ * إن غاب أي مقطع من القائمة يُنطق النص الكامل بالصوت المحلي، وإلا يبقى النص وحده.
+ */
+export async function sayParts(parts: string[], fallbackText: string, gapMs = 90): Promise<AudioSource> {
+  stopAudio();
+  const gen = generation;
+  const files = await loadManifest();
+  if (gen !== generation) return 'none';
+  if (parts.length === 0 || !parts.every((p) => files.has(p))) return speak(fallbackText, gen);
+  for (const p of parts) {
+    if (gen !== generation) return 'none';
+    const source = await playFile(`${AUDIO_BASE}${p}.mp3`, gen);
+    if (source === 'none') return 'none';
+    await new Promise((r) => setTimeout(r, gapMs));
+  }
+  return 'file';
+}
+
+/** هل لهذا المعرّف ملف مسجّل في القائمة (للوحة الأب) */
+export async function hasClip(audioId: string): Promise<boolean> {
+  return (await loadManifest()).has(audioId);
+}
+
+/** عدد الملفات المسجّلة المتاحة */
+export async function clipCount(): Promise<number> {
+  return (await loadManifest()).size;
+}
+
 /** وصف الصوت المتاح للوحة الأب */
 export function describeAudioCapability(): string {
   if (!('speechSynthesis' in window)) return 'لا يدعم المتصفح الكلام المُولَّد؛ تُستخدم الملفات المسجّلة فقط.';

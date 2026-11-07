@@ -13,6 +13,7 @@ import { describeAudioCapability } from '../audio/audio';
 import { LESSON_L1A_01 } from '../content/lessons/L1A-01';
 import { progressSinceBaseline } from '../avatar/insights';
 import { AVATAR_LOOK_LABELS, type AvatarLook } from '../avatar/GhaithAvatar';
+import { AudioReview } from './AudioReview';
 
 async function sha256(text: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('ghaith-pin:' + text));
@@ -291,7 +292,12 @@ export function ParentScreen() {
         </p>
         <p>
           <label>
-            <input type="checkbox" checked={profile.voiceEnabled} onChange={(e) => void updateProfile({ voiceEnabled: e.target.checked })} /> صوت المتصفح المحلي للرفيق (النص يبقى دائمًا)
+            <input type="checkbox" checked={profile.voiceEnabled} onChange={(e) => void updateProfile({ voiceEnabled: e.target.checked })} /> صوت المتصفح المحلي للرفيق عند غياب الملفات المسجّلة (النص يبقى دائمًا)
+          </label>
+        </p>
+        <p>
+          <label>
+            <input type="checkbox" checked={profile.sfxEnabled} onChange={(e) => void updateProfile({ sfxEnabled: e.target.checked })} /> أصوات اللعب القصيرة (القفزة، الكنز، النجمة)
           </label>
         </p>
         <p>
@@ -300,6 +306,9 @@ export function ParentScreen() {
         <p>الصوت: {describeAudioCapability()}</p>
         <p>التخزين: {storage}</p>
       </div>
+
+      <h2>مراجعة الصوت</h2>
+      <AudioReview childName={profile.name} />
 
       <h2>قواعد الإتقان (JSON)</h2>
       <div className="panel">

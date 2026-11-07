@@ -24,9 +24,11 @@ export interface ChildProfile {
   sessionMinutes: number;
   /** صوت المتصفح المحلي للرفيق */
   voiceEnabled: boolean;
+  /** أصوات اللعب القصيرة (القفزة، الكنز، النجمة) */
+  sfxEnabled: boolean;
 }
 
-export const DEFAULT_PROFILE: ChildProfile = { name: 'غيث', avatarLook: null, sessionMinutes: 12, voiceEnabled: true };
+export const DEFAULT_PROFILE: ChildProfile = { name: 'غيث', avatarLook: null, sessionMinutes: 12, voiceEnabled: true, sfxEnabled: true };
 
 export async function startSession(lessonCode: string, childId = DEFAULT_CHILD_ID): Promise<SessionRecord> {
   const now = Date.now();

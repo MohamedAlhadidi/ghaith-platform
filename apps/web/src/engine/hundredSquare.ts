@@ -1,17 +1,19 @@
 // قالب "لوحة المائة": مولدات أسئلة الدرس الأول (ص 4–5) بمهارة MATH.G2.S1.CA01-2
 // كل النصوص قصيرة (حتى ثماني كلمات) وبمصطلح واحد ثابت لكل مفهوم:
 // "قفزة" = عشرة، "خطوة" = واحد، "أكثر" = النزول أو التقدم، "أقل" = الصعود أو الرجوع، "العقد" = العدد المنتهي بصفر.
+// كل نص له مقاطع صوتية مركّبة (معرّفات من audio/phrases.ts ومقاطع الأعداد) حتى يُنطق من ملفات مسجّلة دون اتصال.
 
 import { toArabicIndic } from './answers';
 import type { AnswerMatcher } from './answers';
 import { classifyBetweenError, classifyLocateError, classifyMidpointError, classifyNearError, classifyStepError, type ErrorTag, type StepContext } from './errors';
 import { createRng, type Rng } from './rng';
 import type { Evaluation, GeneratedQuestion, InputMode, QuestionHint, SquareView } from './question';
+import { PHRASES, num } from '../audio/phrases';
 
 export const HUNDRED_SQUARE_SKILL = 'MATH.G2.S1.CA01-2';
 
 export type HundredSquareVariant =
-  | 'missing_cell' // أكمل الخانة الممحوّة في جزء من الخريطة
+  | 'missing_cell' // أكمل الخانة الممحوّة في جزء من اللوحة
   | 'ten_more_less' // عشرة أكثر/أقل (قفزة)
   | 'one_more_less' // واحد أكثر/أقل (خطوة)
   | 'between_decades' // أي عدد بين عقدين (إجابات متعددة صحيحة)
@@ -21,7 +23,7 @@ export type HundredSquareVariant =
 
 const ar = toArabicIndic;
 
-/** يبني عرض الخريطة بقيم افتراضية */
+/** يبني عرض اللوحة بقيم افتراضية */
 function square(partial: Partial<SquareView>): SquareView {
   return { showAll: false, reveal: [], highlight: [], clickable: false, ...partial };
 }
@@ -34,29 +36,19 @@ export function colOf(n: number): number {
   return ((n - 1) % 10) + 1;
 }
 
-/** جمل التغذية الراجعة العامة لكل وسم (قصيرة وثابتة) */
-const GENERIC_FEEDBACK: Record<ErrorTag, string> = {
-  none: 'أحسنت!',
-  not_a_number: 'اكتب عددًا.',
-  confused_step: 'انتبه: خطوة أم قفزة؟',
-  wrong_direction: 'انتبه: أكثر أم أقل؟',
-  reversed_digits: 'انتبه: العشرات أولًا، ثم الآحاد.',
-  dropped_zero: 'انتبه إلى الصفر.',
-  off_by_one: 'قريب! هو جاره في الصف.',
-  off_by_ten: 'قريب! هو في صف آخر.',
-  same_row: 'الصف صحيح. الخانة غير هذه.',
-  same_column: 'العمود صحيح. الصف غير هذا.',
-  on_boundary: 'هذا العقد نفسه. نريد عددًا بينهما.',
-  not_midpoint: 'بينهما، لكن ليس المنتصف.',
-  out_of_range: 'اللوحة من واحد إلى مائة.',
-  skipped: 'حسنًا. التالي.',
-  other: 'ليس هذا. انظر إلى اللوحة.',
-};
+/** تغذية راجعة من معرّف مقطع ثابت */
+function fb(id: string, tag: ErrorTag): Evaluation {
+  return { tag, feedbackAr: PHRASES[id], audioId: id };
+}
 
-function stepFeedback(tag: ErrorTag, ctx: StepContext): string {
-  if (tag === 'confused_step') return ctx.step === 10 ? 'هذه خطوة. نريد قفزة: عشرة.' : 'هذه قفزة. نريد خطوة: واحد.';
-  if (tag === 'wrong_direction') return ctx.direction === 'more' ? 'ذهبت أقل. نريد أكثر.' : 'ذهبت أكثر. نريد أقل.';
-  return GENERIC_FEEDBACK[tag];
+function genericFeedback(tag: ErrorTag): Evaluation {
+  return fb(`fb.${tag}`, tag);
+}
+
+function stepFeedback(tag: ErrorTag, ctx: StepContext): Evaluation {
+  if (tag === 'confused_step') return fb(ctx.step === 10 ? 'fb.confused_step.jump' : 'fb.confused_step.step', tag);
+  if (tag === 'wrong_direction') return fb(ctx.direction === 'more' ? 'fb.wrong_direction.more' : 'fb.wrong_direction.less', tag);
+  return genericFeedback(tag);
 }
 
 function makeId(variant: HundredSquareVariant, seed: number, mode: InputMode): string {
@@ -93,17 +85,25 @@ function missingCell(seed: number): GeneratedQuestion {
   const down = reveal.includes(hidden + 10) ? hidden + 10 : null;
   const side = reveal.find((c) => c === hidden - 1 || c === hidden + 1) ?? null;
   const anchorCell = up ?? down ?? (side as number);
+  const sideBefore = side !== null && (side as number) < hidden;
 
+  // التلميح الأول: الجار المعروض والعملية؛ الثاني: السؤال الحسابي؛ الثالث: كشف اللوحة
   const hint1 =
     up !== null
-      ? `فوقها ${ar(up)}. قفزة أكثر: عشرة.`
+      ? { textAr: `فوقها ${ar(up)}. قفزة أكثر: عشرة.`, parts: ['w.above_it', num(up), 'w.jump_more_ten'] }
       : down !== null
-        ? `تحتها ${ar(down)}. قفزة أقل: عشرة.`
-        : (side as number) < hidden
-          ? `بجانبها ${ar(side as number)}. خطوة أكثر: واحد.`
-          : `بجانبها ${ar(side as number)}. خطوة أقل: واحد.`;
+        ? { textAr: `تحتها ${ar(down)}. قفزة أقل: عشرة.`, parts: ['w.below_it', num(down), 'w.jump_less_ten'] }
+        : sideBefore
+          ? { textAr: `بجانبها ${ar(side as number)}. خطوة أكثر: واحد.`, parts: ['w.beside_it', num(side as number), 'w.step_more_one'] }
+          : { textAr: `بجانبها ${ar(side as number)}. خطوة أقل: واحد.`, parts: ['w.beside_it', num(side as number), 'w.step_less_one'] };
   const hint2 =
-    up !== null ? `${ar(up)} وعشرة أكثر؟` : down !== null ? `${ar(down)} وعشرة أقل؟` : (side as number) < hidden ? `${ar(side as number)} وواحد أكثر؟` : `${ar(side as number)} وواحد أقل؟`;
+    up !== null
+      ? { textAr: `${ar(up)} وعشرة أكثر؟`, parts: [num(up), 'w.and_ten_more_q'] }
+      : down !== null
+        ? { textAr: `${ar(down)} وعشرة أقل؟`, parts: [num(down), 'w.and_ten_less_q'] }
+        : sideBefore
+          ? { textAr: `${ar(side as number)} وواحد أكثر؟`, parts: [num(side as number), 'w.and_one_more_q'] }
+          : { textAr: `${ar(side as number)} وواحد أقل؟`, parts: [num(side as number), 'w.and_one_less_q'] };
 
   return {
     id: makeId('missing_cell', seed, 'numpad'),
@@ -112,26 +112,27 @@ function missingCell(seed: number): GeneratedQuestion {
     variant: 'missing_cell',
     seed,
     representation: 'pictorial',
-    promptAr: 'انظر إلى الخانة الصفراء. ما العدد؟',
+    promptAr: PHRASES['hs.prompt.missing_cell'],
     promptParts: [
       { kind: 'text', textAr: 'الخانة الصفراء' },
       { kind: 'number', value: 0, tone: 'unknown' },
       { kind: 'text', textAr: 'ما العدد؟' },
     ],
     audioId: 'hs.prompt.missing_cell',
+    audioParts: ['hs.prompt.missing_cell'],
     square: square({ showAll: false, reveal, hiddenCell: hidden }),
     inputMode: 'numpad',
     matcher: { kind: 'exact', value: hidden },
     hints: [
-      { textAr: hint1, audioId: '', highlight: [anchorCell], arrow: { from: anchorCell, to: hidden, labelAr: up !== null ? '+١٠' : down !== null ? '−١٠' : (side as number) < hidden ? '+١' : '−١' } },
-      { textAr: hint2, audioId: '', highlight: cells },
-      { textAr: 'انظر إلى اللوحة كاملة.', audioId: 'hs.hint.reveal', revealSquare: true, highlight: [hidden] },
+      { textAr: hint1.textAr, audioId: '', audioParts: hint1.parts, highlight: [anchorCell], arrow: { from: anchorCell, to: hidden, labelAr: up !== null ? '+١٠' : down !== null ? '−١٠' : sideBefore ? '+١' : '−١' } },
+      { textAr: hint2.textAr, audioId: '', audioParts: hint2.parts, highlight: cells },
+      { textAr: PHRASES['hs.hint.reveal'], audioId: 'hs.hint.reveal', revealSquare: true, highlight: [hidden] },
     ],
     explainAr: `العدد ${ar(hidden)}.`,
+    explainParts: ['w.the_number', num(hidden)],
     solutionPath: [anchorCell, hidden],
     evaluate(given): Evaluation {
-      const tag = classifyNearError(given, hidden);
-      return { tag, feedbackAr: GENERIC_FEEDBACK[tag] };
+      return genericFeedback(classifyNearError(given, hidden));
     },
   };
 }
@@ -145,11 +146,14 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
   const dirWord = more ? 'أكثر' : 'أقل';
   const moveWord = step === 10 ? 'قفزة' : 'خطوة';
   const variant: HundredSquareVariant = step === 10 ? 'ten_more_less' : 'one_more_less';
+  const opKey = `${step === 10 ? 'ten' : 'one'}_${more ? 'more' : 'less'}`;
+  const opId = `op.${opKey}`;
   const ctx: StepContext = { base, step, direction: more ? 'more' : 'less' };
   const representation = mode === 'move' ? 'concrete' : showSquare ? 'pictorial' : 'abstract';
   // الصيغة المنطوقة فعلٌ أولًا وخطوة واحدة؛ والعرض البصري بطاقات: العدد ← العملية ← ؟
   const opText = `${stepWord} ${dirWord}`;
   const promptAr = mode === 'move' ? `أنت على ${ar(base)}. اذهب إلى ${opText}.` : `ما العدد؟ ${opText} من ${ar(base)}.`;
+  const audioParts = mode === 'move' ? ['w.you_are_on', num(base), 'w.go_to', opId] : ['w.what_number', opId, 'w.of', num(base)];
   const promptParts: GeneratedQuestion['promptParts'] =
     mode === 'move'
       ? [
@@ -165,25 +169,26 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
   // حدود الصف: الخطوة قد تنقل إلى صف جديد، وهذا يُقال صراحة
   const boundary =
     step === 1 && more && base % 10 === 0
-      ? `${ar(base)} آخر الصف. ${ar(expected)} أول الصف التالي.`
+      ? { textAr: `${ar(base)} آخر الصف. ${ar(expected)} أول الصف التالي.`, parts: [num(base), 'w.last_in_row', num(expected), 'w.first_next_row'] }
       : step === 1 && !more && base % 10 === 1
-        ? `${ar(base)} أول الصف. ${ar(expected)} آخر الصف السابق.`
+        ? { textAr: `${ar(base)} أول الصف. ${ar(expected)} آخر الصف السابق.`, parts: [num(base), 'w.first_in_row', num(expected), 'w.last_prev_row'] }
         : null;
 
   // سلّم التلميحات في وضع الحركة يتدرج: أي زوج من الأزرار؟ ← أي اتجاه؟ ← الكنز هنا. لا يُعطى الجواب في التلميح الأول
   const pulsePair = step === 10 ? 'jump' : 'step';
   const pulseExact = step === 10 ? (more ? 'jump_more' : 'jump_less') : more ? 'step_more' : 'step_less';
+  const direction2 = step === 10 ? (more ? { textAr: 'إلى أسفل = أكثر.', parts: ['w.down_is_more'] } : { textAr: 'إلى أعلى = أقل.', parts: ['w.up_is_less'] }) : more ? { textAr: 'خطوة واحدة أكثر.', parts: ['w.one_step_more'] } : { textAr: 'خطوة واحدة أقل.', parts: ['w.one_step_less'] };
   const hints: QuestionHint[] =
     mode === 'move'
       ? [
-          { textAr: `${stepWord} ${dirWord} = ${moveWord}. أي زر؟`, audioId: '', highlight: [base], pulse: pulsePair },
-          { textAr: boundary ?? (step === 10 ? `${more ? 'إلى أسفل' : 'إلى أعلى'} = ${dirWord}.` : `خطوة واحدة ${dirWord}.`), audioId: '', highlight: [base, expected], arrow, pulse: pulseExact },
-          { textAr: 'الكنز هنا.', audioId: 'hs.hint.here', highlight: [expected], pulse: pulseExact },
+          { textAr: `${stepWord} ${dirWord} = ${moveWord}. أي زر؟`, audioId: '', audioParts: [opId, step === 10 ? 'w.is_jump_which' : 'w.is_step_which'], highlight: [base], pulse: pulsePair },
+          { textAr: (boundary ?? direction2).textAr, audioId: '', audioParts: (boundary ?? direction2).parts, highlight: [base, expected], arrow, pulse: pulseExact },
+          { textAr: PHRASES['hs.hint.here'], audioId: 'hs.hint.here', highlight: [expected], pulse: pulseExact },
         ]
       : [
-          { textAr: `ابحث عن ${ar(base)} في اللوحة.`, audioId: '', highlight: [base], revealSquare: true },
-          { textAr: boundary ?? `${moveWord} ${dirWord} = ${stepWord} ${dirWord}.`, audioId: '', highlight: [base, expected], arrow, revealSquare: true },
-          { textAr: `${ar(base)} و${stepWord} ${dirWord}: ${ar(expected)}.`, audioId: '', highlight: [expected], revealSquare: true },
+          { textAr: `ابحث عن ${ar(base)} في اللوحة.`, audioId: '', audioParts: ['w.find', num(base), 'w.in_board'], highlight: [base], revealSquare: true },
+          { textAr: boundary?.textAr ?? `${moveWord} ${dirWord} = ${stepWord} ${dirWord}.`, audioId: '', audioParts: boundary?.parts ?? [`w.move_means.${opKey}`], highlight: [base, expected], arrow, revealSquare: true },
+          { textAr: `${ar(base)} و${stepWord} ${dirWord}: ${ar(expected)}.`, audioId: '', audioParts: [num(base), 'w.and', opId, 'w.is', num(expected)], highlight: [expected], revealSquare: true },
         ];
 
   return {
@@ -196,15 +201,16 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
     promptAr,
     promptParts,
     audioId: '',
+    audioParts,
     square: mode === 'move' ? square({ showAll: true, start: base }) : showSquare ? square({ showAll: true, highlight: [base] }) : undefined,
     inputMode: mode,
     matcher: { kind: 'exact', value: expected },
     hints,
     explainAr: `${stepWord} ${dirWord} من ${ar(base)}: ${ar(expected)}.`,
+    explainParts: [opId, 'w.of', num(base), 'w.is', num(expected)],
     solutionPath: [base, expected],
     evaluate(given): Evaluation {
-      const tag = classifyStepError(given, expected, ctx);
-      return { tag, feedbackAr: stepFeedback(tag, ctx) };
+      return stepFeedback(classifyStepError(given, expected, ctx), ctx);
     },
   };
 }
@@ -231,26 +237,28 @@ function columnJumps(seed: number): GeneratedQuestion {
       { kind: 'text', textAr: 'اضغط' },
       { kind: 'op', textAr: 'قفزة أكثر' },
       { kind: 'number', value: jumps, tone: 'start' },
-      { kind: 'text', textAr: jumps === 2 ? 'مرات' : 'مرات' },
+      { kind: 'text', textAr: 'مرات' },
     ],
     audioId: '',
+    audioParts: ['w.you_are_on', num(base), 'w.jump_down', jumps === 2 ? 'w.twice' : 'w.three_times'],
     square: square({ showAll: true, start: base, highlight: [] }),
     inputMode: 'move',
     matcher: { kind: 'exact', value: expected },
     hints: [
-      { textAr: 'قفزة أكثر: هذا الزر.', audioId: '', highlight: [base], pulse: 'jump_more' },
-      { textAr: `عدّ القفزات: ${path.slice(1).map(ar).join('، ')}.`, audioId: '', highlight: path, pulse: 'jump_more' },
-      { textAr: 'الكنز هنا.', audioId: 'hs.hint.here', highlight: [expected], pulse: 'jump_more' },
+      { textAr: PHRASES['w.jump_more_this_button'], audioId: 'w.jump_more_this_button', highlight: [base], pulse: 'jump_more' },
+      { textAr: `عدّ القفزات: ${path.slice(1).map(ar).join('، ')}.`, audioId: '', audioParts: ['w.count_jumps', ...path.slice(1).map(num)], highlight: path, pulse: 'jump_more' },
+      { textAr: PHRASES['hs.hint.here'], audioId: 'hs.hint.here', highlight: [expected], pulse: 'jump_more' },
     ],
     explainAr: `${path.map(ar).join('، ')}.`,
+    explainParts: path.map(num),
     solutionPath: path,
     evaluate(given): Evaluation {
-      if (given === null) return { tag: 'not_a_number', feedbackAr: GENERIC_FEEDBACK.not_a_number };
-      if (given === expected) return { tag: 'none', feedbackAr: GENERIC_FEEDBACK.none };
-      if (given === base) return { tag: 'off_by_ten', feedbackAr: 'لم تتحرك. اضغط قفزة أكثر.' };
-      if (given < base) return { tag: 'wrong_direction', feedbackAr: 'ذهبت أقل. نريد إلى أسفل.' };
-      if ((given - base) % 10 === 0) return { tag: 'off_by_ten', feedbackAr: 'عدّ القفزات مرة أخرى.' };
-      return { tag: 'confused_step', feedbackAr: 'هذه خطوة. نريد قفزة فقط.' };
+      if (given === null) return genericFeedback('not_a_number');
+      if (given === expected) return genericFeedback('none');
+      if (given === base) return fb('fb.cj.no_move', 'off_by_ten');
+      if (given < base) return fb('fb.cj.went_less', 'wrong_direction');
+      if ((given - base) % 10 === 0) return fb('fb.cj.count_again', 'off_by_ten');
+      return fb('fb.cj.step', 'confused_step');
     },
   };
 }
@@ -275,19 +283,20 @@ function betweenDecades(seed: number): GeneratedQuestion {
       { kind: 'number', value: high, tone: 'start' },
     ],
     audioId: '',
+    audioParts: ['w.tap_between', num(low), 'w.and', num(high)],
     square: square({ showAll: true, highlight: [low, high], clickable: true }),
     inputMode: 'cell',
     matcher: { kind: 'set', values },
     hints: [
-      { textAr: 'هذان العقدان. الكنز بينهما.', audioId: 'hs.hint.between.1', highlight: [low, high] },
-      { textAr: 'كل هذا الصف بينهما.', audioId: 'hs.hint.between.2', highlight: values },
-      { textAr: 'مثل هذا.', audioId: 'hs.hint.between.3', highlight: [low + 5] },
+      { textAr: PHRASES['hs.hint.between.1'], audioId: 'hs.hint.between.1', highlight: [low, high] },
+      { textAr: PHRASES['hs.hint.between.2'], audioId: 'hs.hint.between.2', highlight: values },
+      { textAr: PHRASES['hs.hint.between.3'], audioId: 'hs.hint.between.3', highlight: [low + 5] },
     ],
     explainAr: `بين ${ar(low)} و${ar(high)}: من ${ar(low + 1)} إلى ${ar(high - 1)}.`,
+    explainParts: ['w.between', num(low), 'w.and', num(high), 'w.of', num(low + 1), 'w.to', num(high - 1)],
     solutionPath: [low, low + 5],
     evaluate(given): Evaluation {
-      const tag = classifyBetweenError(given, low, high);
-      return { tag, feedbackAr: GENERIC_FEEDBACK[tag] };
+      return genericFeedback(classifyBetweenError(given, low, high));
     },
   };
 }
@@ -314,19 +323,20 @@ function midpoint(seed: number): GeneratedQuestion {
       { kind: 'number', value: high, tone: 'start' },
     ],
     audioId: '',
+    audioParts: ['w.tap_midpoint', num(low), 'w.and', num(high)],
     square: square({ showAll: true, highlight: [low, high], clickable: true }),
     inputMode: 'cell',
     matcher: { kind: 'exact', value: mid },
     hints: [
-      { textAr: `المنتصف: خمس خطوات بعد ${ar(low)}.`, audioId: '', highlight: [low] },
-      { textAr: 'عدّ خمس خطوات.', audioId: 'hs.hint.midpoint.2', highlight: [low + 1, low + 2, low + 3, low + 4, low + 5] },
-      { textAr: 'هنا المنتصف.', audioId: 'hs.hint.midpoint.3', highlight: [mid] },
+      { textAr: `المنتصف: خمس خطوات بعد ${ar(low)}.`, audioId: '', audioParts: ['w.midpoint_five_after', num(low)], highlight: [low] },
+      { textAr: PHRASES['hs.hint.midpoint.2'], audioId: 'hs.hint.midpoint.2', highlight: [low + 1, low + 2, low + 3, low + 4, low + 5] },
+      { textAr: PHRASES['hs.hint.midpoint.3'], audioId: 'hs.hint.midpoint.3', highlight: [mid] },
     ],
     explainAr: `منتصف ${ar(low)} و${ar(high)}: ${ar(mid)}.`,
+    explainParts: ['w.midpoint_of', num(low), 'w.and', num(high), 'w.is', num(mid)],
     solutionPath: [low, low + 1, low + 2, low + 3, low + 4, mid],
     evaluate(given): Evaluation {
-      const tag = classifyMidpointError(given, low, high);
-      return { tag, feedbackAr: GENERIC_FEEDBACK[tag] };
+      return genericFeedback(classifyMidpointError(given, low, high));
     },
   };
 }
@@ -349,19 +359,20 @@ function locate(seed: number): GeneratedQuestion {
       { kind: 'text', textAr: '؟ انقر عليه.' },
     ],
     audioId: '',
+    audioParts: ['w.where', num(target), 'w.tap_it'],
     square: square({ showAll: true, clickable: true }),
     inputMode: 'cell',
     matcher: { kind: 'exact', value: target },
     hints: [
-      { textAr: `ابدأ من صف ${ar(rowStart)}.`, audioId: '', highlight: [rowStart] },
-      { textAr: 'الكنز في هذا الصف.', audioId: 'hs.hint.locate.2', highlight: Array.from({ length: 10 }, (_, i) => rowStart + i) },
-      { textAr: 'هنا.', audioId: 'hs.hint.locate.3', highlight: [target] },
+      { textAr: `ابدأ من صف ${ar(rowStart)}.`, audioId: '', audioParts: ['w.start_row', num(rowStart)], highlight: [rowStart] },
+      { textAr: PHRASES['hs.hint.locate.2'], audioId: 'hs.hint.locate.2', highlight: Array.from({ length: 10 }, (_, i) => rowStart + i) },
+      { textAr: PHRASES['hs.hint.locate.3'], audioId: 'hs.hint.locate.3', highlight: [target] },
     ],
     explainAr: `${ar(target)}: صف ${ar(rowOf(target))}، خانة ${ar(colOf(target))}.`,
+    explainParts: [num(target), 'w.row', num(rowOf(target)), 'w.cell', num(colOf(target))],
     solutionPath: [rowStart, target],
     evaluate(given): Evaluation {
-      const tag = classifyLocateError(given, target);
-      return { tag, feedbackAr: GENERIC_FEEDBACK[tag] };
+      return genericFeedback(classifyLocateError(given, target));
     },
   };
 }
@@ -369,7 +380,7 @@ function locate(seed: number): GeneratedQuestion {
 export interface GenerateOptions {
   /** طريقة الإجابة لأسئلة "أكثر/أقل": حركة الأفاتار، أو كتابة بلوحة الأرقام */
   mode?: InputMode;
-  /** عند الكتابة: هل تُعرض الخريطة (صوري) أم لا (مجرد) */
+  /** عند الكتابة: هل تُعرض اللوحة (صوري) أم لا (مجرد) */
   showSquare?: boolean;
 }
 

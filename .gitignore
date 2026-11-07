@@ -31,3 +31,7 @@ Thumbs.db
 # مخرجات اختبارات المتصفح
 apps/web/test-results/
 apps/web/playwright-report/
+
+# مفاتيح خدمات خارجية
+tools/audio/.env
+tools/audio/generate.log
