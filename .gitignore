@@ -1,6 +1,6 @@
 # بيانات حساسة ومصادر لا تُرفع
 content/sources/
-data/
+/data/
 *.pfx
 *.user
 appsettings.*.local.json
@@ -27,3 +27,7 @@ TestResults/
 !.vscode/settings.json
 *.log
 Thumbs.db
+
+# مخرجات اختبارات المتصفح
+apps/web/test-results/
+apps/web/playwright-report/

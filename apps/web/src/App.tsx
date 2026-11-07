@@ -1,9 +1,10 @@
-// موجّه بسيط بالعنوان (#/...) بلا مكتبة: شاشة البداية، الدرس، لوحة الأب
+// موجّه بسيط بالعنوان (#/...) بلا مكتبة: شاشة البداية، الجلسة، لوحة الأب
+// قبل عرض أي شاشة تُسوَّى الجلسات المفتوحة (تُغلق المنقطعة وتبقى القابلة للاستئناف)
 import { useEffect, useState } from 'react';
 import { StartScreen } from './screens/StartScreen';
 import { LessonScreen } from './screens/LessonScreen';
 import { ParentScreen } from './screens/ParentScreen';
-import { closeOrphanSessions } from './data/repo';
+import { reconcileOpenSessions } from './data/repo';
 
 export type Route = { name: 'start' } | { name: 'lesson'; lessonCode: string } | { name: 'parent' };
 
@@ -20,18 +21,22 @@ export function navigate(path: string): void {
 
 export function App() {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const onHash = () => setRoute(parseRoute(window.location.hash));
     window.addEventListener('hashchange', onHash);
-    // جلسات لم تُغلق (مثلًا انتهى وقت الشاشة فجأة) تُغلق هنا بسبب "killed"
-    closeOrphanSessions().catch(() => undefined);
+    reconcileOpenSessions()
+      .catch(() => undefined)
+      .finally(() => setReady(true));
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  if (!ready) return <main className="screen screen-center"><p className="subtitle">لحظة…</p></main>;
+
   switch (route.name) {
     case 'lesson':
-      return <LessonScreen lessonCode={route.lessonCode} />;
+      return <LessonScreen key={route.lessonCode} lessonCode={route.lessonCode} />;
     case 'parent':
       return <ParentScreen />;
     default:
