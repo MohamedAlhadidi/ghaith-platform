@@ -20,7 +20,7 @@ async function sha256(text: string): Promise<string> {
 
 const PHASE_AR = { baseline: 'خط أساس', guided: 'توجيه', independent: 'وحدك', check: 'تحقق', review: 'مراجعة' } as const;
 const MODE_AR = { numpad: 'كتابة', cell: 'نقر', move: 'حركة' } as const;
-const REP_AR = { concrete: 'حركة', pictorial: 'خريطة', abstract: 'بلا خريطة' } as const;
+const REP_AR = { concrete: 'حركة', pictorial: 'خريطة', abstract: 'بلا لوحة' } as const;
 const END_AR: Record<NonNullable<SessionRecord['endReason']>, string> = { completed: 'اكتملت', stopped: 'توقفت', killed: 'انقطعت', abandoned: 'تُركت' };
 
 const ar = toArabicIndic;

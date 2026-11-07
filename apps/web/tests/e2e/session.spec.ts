@@ -133,7 +133,7 @@ test('جلسة كاملة بإجابات صحيحة: 19 محاولة ونهاي�
   }
   expect(stages.at(-1)).toBe('end');
   expect(stages.filter((s) => s === 'question')).toHaveLength(19);
-  expect(stages.filter((s) => s === 'model')).toHaveLength(5);
+  expect(stages.filter((s) => s === 'model')).toHaveLength(LESSON_L1A_01.model.length);
   // 11 نجمة للأسئلة (عدا خط الأساس) + 3 لإكمال الجلسة
   await expect(page.getByTestId('stars')).toHaveText('★'.repeat(14));
   await page.screenshot({ path: 'test-results/end.png' });
@@ -160,7 +160,8 @@ test('الاستئناف بعد إعادة التحميل يعود إلى الس
   const main = page.locator('main[data-stage="question"]');
   await expect(main).toHaveAttribute('data-index', '0');
   const { plan } = await currentPlan(page);
-  await answerCurrent(page, plan[0]);
+  // "لا أعرف" في خط الأساس يُسجَّل بوسم skipped بدل التخمين
+  await page.getByTestId("skip").click();
   await expect(main).toHaveAttribute('data-index', '1');
   await answerCurrent(page, plan[1]);
   await expect(main).toHaveAttribute('data-index', '2');
@@ -168,6 +169,7 @@ test('الاستئناف بعد إعادة التحميل يعود إلى الس
   await page.reload();
   await expect(page.locator('main[data-stage="question"]')).toHaveAttribute('data-index', '2');
   expect(await countStore(page, 'attempts')).toBe(2);
+  expect(await countStore(page, 'attempts', (a) => a.errorTag === 'skipped')).toBe(1);
   expect(await countStore(page, 'sessions')).toBe(1);
   // ومن شاشة البداية يظهر زر "نكمل" ويعود إلى الموضع نفسه
   await page.goto('/');

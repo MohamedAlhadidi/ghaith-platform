@@ -16,6 +16,7 @@ export type ErrorTag =
   | 'on_boundary' // اختار العقد نفسه بدل عدد بين العقدين
   | 'not_midpoint' // بين العقدين لكن ليس المنتصف
   | 'out_of_range' // خارج ١ إلى ١٠٠
+  | 'skipped' // ضغط "لا أعرف" (في خط الأساس والتحقق)
   | 'other';
 
 export const ERROR_TAG_LABELS: Record<ErrorTag, string> = {
@@ -32,6 +33,7 @@ export const ERROR_TAG_LABELS: Record<ErrorTag, string> = {
   on_boundary: 'اختار العقد نفسه',
   not_midpoint: 'ليس المنتصف',
   out_of_range: 'خارج اللوحة',
+  skipped: 'قال: لا أعرف',
   other: 'أخرى',
 };
 
@@ -59,6 +61,7 @@ export const ERROR_TAG_MEANING: Record<ErrorTag, { meaningAr: string; paperAr: s
   on_boundary: { meaningAr: 'يختار العقد نفسه بدل عدد بين العقدين.', paperAr: 'ارسما خط أعداد من ٤٠ إلى ٥٠ وضعا نقاطًا بينهما.' },
   not_midpoint: { meaningAr: 'يعرف أن العدد بين العقدين لكن لا يجد المنتصف.', paperAr: 'عدّا خمسة بعد العقد بالأصابع.' },
   out_of_range: { meaningAr: 'كتب عددًا خارج اللوحة.', paperAr: 'ذكّره أن اللوحة من ١ إلى ١٠٠.' },
+  skipped: { meaningAr: 'اختار "لا أعرف" بدل التخمين، وهذا أصدق من إجابة عشوائية.', paperAr: 'اعرض عليه السؤال نفسه على لوحة ورقية وهو يشير بإصبعه.' },
   other: { meaningAr: 'خطأ بلا نمط واضح.', paperAr: 'اسأله كيف فكّر؛ قد يكون تخمينًا.' },
 };
 

@@ -27,6 +27,7 @@ import { say, setVoiceEnabled, stopAudio } from '../audio/audio';
 import { HundredSquare } from '../ui/HundredSquare';
 import { NumberPad } from '../ui/NumberPad';
 import { MoveControls } from '../ui/MoveControls';
+import { PromptChips } from '../ui/PromptChips';
 import { GhaithAvatar, AVATAR_LOOK_LABELS, type AvatarLook, type AvatarState } from '../avatar/GhaithAvatar';
 import { Companion, type CompanionMood } from '../avatar/Companion';
 import { line, type Situation } from '../avatar/script';
@@ -218,7 +219,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     setHintPulse(false);
     setFocusedCell(q.question.square?.start ?? 1);
     setPosition(q.question.square?.start ?? 1);
-    // الأفاتار حاضر على الخريطة في كل سؤال؛ يبدأ من خانة الانطلاق أو من أول الخريطة
+    // الأفاتار حاضر على اللوحة في كل سؤال؛ يبدأ من خانة الانطلاق أو من أول الخريطة
     setAvatarAt(q.question.square ? (q.question.square.start ?? 1) : undefined);
     setAvatarState('idle');
     setTreasureAt(undefined);
@@ -291,7 +292,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         if (gen === questionGenRef.current) void speak('goal');
       });
     } else if (stage.kind === 'pick_avatar') {
-      void speakText('اختر شكلك على الخريطة.', 'ui.pick_avatar');
+      void speakText('اختر شكلك على اللوحة.', 'ui.pick_avatar');
     } else if (stage.kind === 'model') {
       const m = lesson.model[stage.index];
       setAvatarAt(m.avatarAt);
@@ -469,6 +470,8 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
       if (!current || locked || lockedRef.current || busy || !lesson) return;
       observerRef.current.action();
       const q = current.question;
+      // جيل السؤال: إن انتقلت الشاشة أثناء الانتظار (مثلًا بنقرة "التالي") فلا يُجدول انتقال ثانٍ على السؤال الجديد
+      const gen = questionGenRef.current;
       const result = matchAnswer(q.matcher, given);
       const givenNumber = typeof given === 'number' ? given : parseIntegerAnswer(given);
       const evaluation = q.evaluate(givenNumber);
@@ -485,6 +488,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         setFeedback({ text: '', ok: null });
         await recordFinal(current, result.correct, result.canonical, 1, 0);
         void speak('baseline_ack', 'idle', String(current.index));
+        if (gen !== questionGenRef.current) return;
         after(900, advance);
         return;
       }
@@ -500,6 +504,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         }
         void speak(tries > 1 || hintLevel > 0 ? 'correct_after_effort' : 'correct', 'cheer', String(current.index));
         await recordFinal(current, true, result.canonical, tries, hintLevel);
+        if (gen !== questionGenRef.current) return;
         after(1600, advance);
         return;
       }
@@ -526,6 +531,21 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
     },
     [advance, after, attempts, busy, current, hintLevel, lesson, locked, recordFinal, speak, speakText],
   );
+
+  /** "لا أعرف" في خط الأساس والتحقق: يُسجَّل كمحاولة بوسم skipped ويُنتقل بهدوء */
+  const skip = useCallback(async () => {
+    if (!current || lockedRef.current || busy || current.feedback === 'immediate') return;
+    observerRef.current.action();
+    lockedRef.current = true;
+    setLocked(true);
+    firstErrorRef.current = 'skipped';
+    setFeedback({ text: '', ok: null });
+    const gen = questionGenRef.current;
+    await recordFinal(current, false, '', 1, 0);
+    if (gen !== questionGenRef.current) return;
+    void speak('baseline_ack', 'idle', String(current.index));
+    after(900, advance);
+  }, [advance, after, busy, current, recordFinal, speak]);
 
   const showHint = useCallback(() => {
     if (!current || !current.hintsAllowed || locked || busy) return;
@@ -605,7 +625,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         <Companion textAr={bubble.text} mood={bubble.mood} onReplay={replay} />
         <div className="button-row">
           <button type="button" className="big-button" autoFocus data-testid="start-session" onClick={() => go(sessionRef.current?.includeBaseline ? { kind: 'question', index: 0 } : { kind: 'model', index: 0 })}>
-            ▶ ابدأ
+            ابدأ
           </button>
           <button type="button" className="big-button secondary" onClick={() => navigate('/')}>رجوع</button>
         </div>
@@ -664,7 +684,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         <div className="lesson-layout">
           <section className="panel">
             <Companion textAr={bubble.text} mood={bubble.mood} onReplay={replay} />
-            <p className="prompt" data-testid="prompt">{m.textAr}</p>
+            <p className="sr-only" data-testid="prompt">{m.textAr}</p>
             <div className="button-row">
               <button type="button" className="big-button" autoFocus data-testid="next" onClick={() => go(last ? { kind: 'question', index: Math.max(firstMain, 0) } : { kind: 'model', index: stage.index + 1 })}>
                 {last ? 'ابدأ اللعب' : 'التالي'}
@@ -672,7 +692,7 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
               {stage.index > 0 && <button type="button" className="big-button secondary" onClick={() => go({ kind: 'model', index: stage.index - 1 })}>السابق</button>}
             </div>
           </section>
-          <HundredSquare view={{ showAll: m.showAll, reveal: [], highlight: m.highlight, clickable: false }} arrow={m.arrow} avatarAt={avatarAt} avatarLook={look} avatarState={avatarState} />
+          <HundredSquare view={{ showAll: m.showAll, reveal: m.reveal ?? [], hiddenCell: m.hiddenCell, highlight: m.highlight, clickable: false }} arrow={m.arrow} avatarAt={avatarAt} avatarLook={look} avatarState={avatarState} />
         </div>
       </main>
     );
@@ -725,8 +745,8 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
         <section className="panel">
           <Companion textAr={bubble.text} mood={bubble.mood} onReplay={replay} compact />
           <div className="prompt-row">
-            {/* السؤال يبقى ظاهرًا كبيرًا عندما تقول فقاعة الرفيق شيئًا آخر (تلميح أو تغذية راجعة) */}
-            <p className={`prompt ${bubble.text === q.promptAr ? 'prompt-echo' : ''}`} data-testid="prompt">{q.promptAr}</p>
+            {/* السؤال بالبطاقات يبقى ظاهرًا دائمًا؛ فقاعة الرفيق تحمل الجملة المنطوقة والتلميحات والتغذية الراجعة */}
+            <PromptChips parts={q.promptParts} />
             {current!.hintsAllowed && (
               <button type="button" className={`icon-button ${hintPulse ? 'pulse' : ''}`} aria-label="تلميح" data-testid="hint" disabled={locked || busy || hintLevel >= q.hints.length} onClick={showHint}>
                 💡
@@ -736,7 +756,13 @@ export function LessonScreen({ lessonCode }: { lessonCode: string }) {
           <div className={`feedback ${feedback ? (feedback.ok === true ? 'ok' : feedback.ok === false ? 'bad' : '') : ''}`} aria-live="assertive" data-testid="feedback">{feedback?.text ?? ''}</div>
           {mode === 'numpad' && <NumberPad resetKey={q.id} disabled={locked || busy} onSubmit={(v) => void answer(v)} onAction={() => observerRef.current.action()} />}
           {mode === 'move' && <MoveControls position={position} disabled={locked || busy} onMove={move} onArrive={() => void answer(position)} />}
-          {mode === 'cell' && <p className="subtitle">انقر على الخانة في الخريطة.</p>}
+          {mode === 'cell' && <p className="subtitle">انقر على الخانة في اللوحة.</p>}
+          {current!.feedback !== 'immediate' && !locked && (
+            <div className="button-row">
+              {/* في خط الأساس والتحقق: "لا أعرف" أصدق من التخمين، ويُسجَّل بوسم خاص */}
+              <button type="button" className="big-button secondary small" onClick={() => void skip()} data-testid="skip">لا أعرف</button>
+            </div>
+          )}
           {locked && (
             <div className="button-row">
               <button type="button" className="big-button" onClick={advance} autoFocus data-testid="next">التالي</button>

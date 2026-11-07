@@ -38,17 +38,18 @@ export function MoveControls({ position, disabled = false, onMove, onArrive }: M
         أنت على <strong>{toArabicIndic(position)}</strong>
       </div>
       <div className="move-grid">
+        {/* الإشارة قبل العدد كما في الكتاب (+١٠)؛ تُثبَّت باتجاه LTR حتى لا يقلبها محرك الاتجاه */}
         <button type="button" className="move-key jump" disabled={!can(10)} onClick={() => onMove(10)} data-move="10">
-          قفزة أكثر <span className="move-delta">+١٠ ⬇</span>
+          قفزة أكثر <span className="move-delta">⬇ <bdi dir="ltr">+١٠</bdi></span>
         </button>
         <button type="button" className="move-key jump" disabled={!can(-10)} onClick={() => onMove(-10)} data-move="-10">
-          قفزة أقل <span className="move-delta">−١٠ ⬆</span>
+          قفزة أقل <span className="move-delta">⬆ <bdi dir="ltr">−١٠</bdi></span>
         </button>
         <button type="button" className="move-key step" disabled={!can(1)} onClick={() => onMove(1)} data-move="1">
-          خطوة أكثر <span className="move-delta">+١</span>
+          خطوة أكثر <span className="move-delta"><bdi dir="ltr">+١</bdi></span>
         </button>
         <button type="button" className="move-key step" disabled={!can(-1)} onClick={() => onMove(-1)} data-move="-1">
-          خطوة أقل <span className="move-delta">−١</span>
+          خطوة أقل <span className="move-delta"><bdi dir="ltr">−١</bdi></span>
         </button>
       </div>
       <button type="button" className="big-button accent move-arrive" disabled={disabled} onClick={onArrive} data-testid="move-arrive">

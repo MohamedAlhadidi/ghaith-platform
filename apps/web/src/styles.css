@@ -134,9 +134,10 @@ button:focus-visible { outline: 4px solid var(--accent); outline-offset: 2px; }
 .hs-focus { outline: 4px solid var(--accent); outline-offset: -2px; }
 .hs-correct { background: #cdebd6; border-color: var(--success); }
 .hs-wrong { background: #f6d2cf; border-color: var(--error); }
-.hs-has-avatar .hs-num { opacity: 0.35; }
-.hs-avatar { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; z-index: 2; }
-.hs-avatar svg { width: 100%; height: 100%; }
+/* الأفاتار يقف في زاوية الخانة حتى يبقى عددها مقروءًا */
+.hs-has-avatar { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(233, 185, 73, 0.45); }
+.hs-avatar { position: absolute; top: -14px; inset-inline-end: -10px; width: 60%; height: 70%; display: flex; align-items: flex-end; justify-content: center; pointer-events: none; z-index: 2; }
+.hs-avatar svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25)); }
 .hs-treasure { position: absolute; top: -6px; inset-inline-end: -4px; font-size: 20px; z-index: 3; animation: sparkle 0.8s ease-in-out infinite alternate; }
 @keyframes sparkle { from { transform: scale(1); } to { transform: scale(1.25); } }
 .hs-arrow-layer { position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); pointer-events: none; z-index: 4; }
@@ -198,4 +199,16 @@ button:focus-visible { outline: 4px solid var(--accent); outline-offset: 2px; }
 .small-link { background: none; border: none; color: var(--muted); font-size: 18px; text-decoration: underline; padding: 8px; }
 
 /* عندما تكرر فقاعة الرفيق نص السؤال نفسه يُصغَّر السؤال حتى لا يُقرأ مرتين */
-.prompt-echo { font-size: 22px; color: var(--muted); font-weight: 600; }
+
+
+/* السؤال بالبطاقات */
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 64px; }
+.chip-text { font-size: 28px; font-weight: 700; }
+.chip { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; min-height: 60px; padding: 0 14px; border-radius: 14px; font-size: 36px; font-weight: 800; }
+.chip-number { background: #cfe6f3; color: var(--primary); border: 3px solid var(--primary); }
+.chip-unknown { background: #fff1b8; color: var(--ink); border: 3px solid var(--accent); }
+.chip-op { background: #e3f1d9; color: #2c6e3f; border: 3px solid var(--success); font-size: 28px; gap: 8px; }
+.chip-icon { font-size: 22px; color: var(--muted); }
+.big-button.small { min-height: 56px; min-width: 160px; font-size: 22px; padding: 8px 20px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

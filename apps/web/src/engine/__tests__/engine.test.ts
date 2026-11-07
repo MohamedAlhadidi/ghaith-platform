@@ -191,6 +191,8 @@ describe('مولدات خريطة المائة (1000 بذرة لكل نوع)', (
         expect(wordCount(q1.promptAr)).toBeLessThanOrEqual(8);
         expect(wordCount(q1.explainAr)).toBeLessThanOrEqual(8);
         for (const h of q1.hints) expect(wordCount(h.textAr)).toBeLessThanOrEqual(8);
+        expect(q1.promptParts.length).toBeGreaterThan(0);
+        for (const part of q1.promptParts) if (part.kind === 'number' && part.tone !== 'unknown') { expect(part.value).toBeGreaterThanOrEqual(1); expect(part.value).toBeLessThanOrEqual(100); }
         for (const c of q1.solutionPath) {
           expect(c).toBeGreaterThanOrEqual(1);
           expect(c).toBeLessThanOrEqual(100);

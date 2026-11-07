@@ -7,9 +7,12 @@ export interface ModelScreen {
   textAr: string;
   showAll: boolean;
   highlight: number[];
+  /** خانات تُعرض عندما تكون اللوحة مغطاة (شاشة الخانة الممحوّة) */
+  reveal?: number[];
+  hiddenCell?: number;
   /** سهم توضيحي من خانة إلى خانة */
   arrow?: { from: number; to: number; labelAr: string };
-  /** موضع الأفاتار على الخريطة في هذه الشاشة */
+  /** موضع الأفاتار على اللوحة في هذه الشاشة */
   avatarAt?: number;
 }
 
@@ -36,13 +39,18 @@ export const LESSON_L1A_01: LessonDefinition = {
   skillCode: HUNDRED_SQUARE_SKILL,
   pagesByEdition: { 'OM-2020-ED1': { from: 4, to: 5 } },
   objectiveAr: 'يحدد غيث موضع أي عدد من ١ إلى ١٠٠ على لوحة المائة، ويعرف أن القفزة (صف لأسفل) عشرة أكثر والخطوة (خانة) واحد أكثر.',
-  vocabularyAr: ['الخريطة (لوحة المائة)', 'صف', 'قفزة = عشرة', 'خطوة = واحد', 'أكثر', 'أقل', 'العقد', 'المنتصف'],
+  vocabularyAr: ['لوحة المائة', 'صف', 'قفزة = عشرة', 'خطوة = واحد', 'أكثر (إلى أسفل)', 'أقل (إلى أعلى)', 'العقود', 'بين العقدين', 'نقطة المنتصف', 'الخانة الصفراء'],
+  // كل شاشة مفهوم واحد بجملة واحدة، بمصطلحات الكتاب: لوحة المائة، إلى أسفل/إلى أعلى، العقود، ما بين العقود، نقطة المنتصف
   model: [
-    { audioId: 'l1a01.model.1', textAr: 'هذه خريطة المائة. كل صف عشرة أعداد.', showAll: true, highlight: [], avatarAt: 1 },
-    { audioId: 'l1a01.model.2', textAr: 'قفزة لأسفل: عشرة أكثر.', showAll: true, highlight: [24, 34], arrow: { from: 24, to: 34, labelAr: '+١٠' }, avatarAt: 24 },
-    { audioId: 'l1a01.model.3', textAr: 'خطوة: واحد أكثر.', showAll: true, highlight: [33, 34], arrow: { from: 33, to: 34, labelAr: '+١' }, avatarAt: 33 },
-    { audioId: 'l1a01.model.4', textAr: 'العقود تنتهي بصفر: عشرة، عشرون، ثلاثون.', showAll: true, highlight: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], avatarAt: 10 },
-    { audioId: 'l1a01.model.5', textAr: 'الآن نبحث عن الكنز معًا.', showAll: true, highlight: [], avatarAt: 1 },
+    { audioId: 'l1a01.model.1', textAr: 'هذه لوحة المائة. كل صف عشرة أعداد.', showAll: true, highlight: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], avatarAt: 1 },
+    { audioId: 'l1a01.model.2', textAr: 'قفزة إلى أسفل: عشرة أكثر.', showAll: true, highlight: [24, 34], arrow: { from: 24, to: 34, labelAr: '+١٠' }, avatarAt: 24 },
+    { audioId: 'l1a01.model.3', textAr: 'قفزة إلى أعلى: عشرة أقل.', showAll: true, highlight: [34, 24], arrow: { from: 34, to: 24, labelAr: '−١٠' }, avatarAt: 34 },
+    { audioId: 'l1a01.model.4', textAr: 'خطوة: واحد أكثر.', showAll: true, highlight: [33, 34], arrow: { from: 33, to: 34, labelAr: '+١' }, avatarAt: 33 },
+    { audioId: 'l1a01.model.5', textAr: 'العقود تنتهي بصفر: عشرة، عشرون، ثلاثون.', showAll: true, highlight: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], avatarAt: 10 },
+    { audioId: 'l1a01.model.6', textAr: 'هذه الأعداد بين العقدين أربعين وخمسين.', showAll: true, highlight: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50], avatarAt: 40 },
+    { audioId: 'l1a01.model.7', textAr: 'نقطة المنتصف بين أربعين وخمسين: خمسة وأربعون.', showAll: true, highlight: [40, 45, 50], arrow: { from: 40, to: 45, labelAr: '+٥' }, avatarAt: 45 },
+    { audioId: 'l1a01.model.8', textAr: 'خانة صفراء: العدد ناقص. فوقها أربعة وعشرون.', showAll: false, reveal: [24, 44], hiddenCell: 34, highlight: [24], arrow: { from: 24, to: 34, labelAr: '+١٠' } },
+    { audioId: 'l1a01.model.9', textAr: 'الآن نبحث عن الكنز معًا.', showAll: true, highlight: [], avatarAt: 1 },
   ],
   counts: { baseline: 8, guided: 3, independent: 5, check: 3, maxAttemptsPerQuestion: 3 },
   paperActivityAr: 'اطبع لوحة مائة أو ارسمها، وغطِّ خمسة أعداد ببطاقات، واطلب من غيث أن يقول العدد المغطّى قبل أن يرفع البطاقة.',
@@ -51,7 +59,7 @@ export const LESSON_L1A_01: LessonDefinition = {
 /** النصوص الثابتة المشتركة التي تحتاج ملفات صوت (معرّف ← نص) */
 export const SHARED_AUDIO_TEXTS: Record<string, string> = {
   'ui.welcome': 'أهلًا غيث! هل أنت مستعد؟',
-  'ui.pick_avatar': 'اختر شكلك على الخريطة.',
+  'ui.pick_avatar': 'اختر شكلك على اللوحة.',
   'ui.paper_suggestion': 'اطلب من بابا أو ماما لعبة البطاقات على الورق.',
   'hs.prompt.missing_cell': 'خانة ممحوّة. ما العدد؟',
 };

@@ -1,4 +1,4 @@
-// قالب "خريطة المائة": مولدات أسئلة الدرس الأول (ص 4–5) بمهارة MATH.G2.S1.CA01-2
+// قالب "لوحة المائة": مولدات أسئلة الدرس الأول (ص 4–5) بمهارة MATH.G2.S1.CA01-2
 // كل النصوص قصيرة (حتى ثماني كلمات) وبمصطلح واحد ثابت لكل مفهوم:
 // "قفزة" = عشرة، "خطوة" = واحد، "أكثر" = النزول أو التقدم، "أقل" = الصعود أو الرجوع، "العقد" = العدد المنتهي بصفر.
 
@@ -48,7 +48,8 @@ const GENERIC_FEEDBACK: Record<ErrorTag, string> = {
   on_boundary: 'هذا العقد نفسه. نريد عددًا بينهما.',
   not_midpoint: 'بينهما، لكن ليس المنتصف.',
   out_of_range: 'اللوحة من واحد إلى مائة.',
-  other: 'ليس هذا. انظر إلى الخريطة.',
+  skipped: 'حسنًا. التالي.',
+  other: 'ليس هذا. انظر إلى اللوحة.',
 };
 
 function stepFeedback(tag: ErrorTag, ctx: StepContext): string {
@@ -110,7 +111,12 @@ function missingCell(seed: number): GeneratedQuestion {
     variant: 'missing_cell',
     seed,
     representation: 'pictorial',
-    promptAr: 'خانة ممحوّة. ما العدد؟',
+    promptAr: 'انظر إلى الخانة الصفراء. ما العدد؟',
+    promptParts: [
+      { kind: 'text', textAr: 'الخانة الصفراء' },
+      { kind: 'number', value: 0, tone: 'unknown' },
+      { kind: 'text', textAr: 'ما العدد؟' },
+    ],
     audioId: 'hs.prompt.missing_cell',
     square: square({ showAll: false, reveal, hiddenCell: hidden }),
     inputMode: 'numpad',
@@ -118,7 +124,7 @@ function missingCell(seed: number): GeneratedQuestion {
     hints: [
       { textAr: hint1, audioId: '', highlight: [anchorCell], arrow: { from: anchorCell, to: hidden, labelAr: up !== null ? '+١٠' : down !== null ? '−١٠' : (side as number) < hidden ? '+١' : '−١' } },
       { textAr: hint2, audioId: '', highlight: cells },
-      { textAr: 'انظر إلى الخريطة كاملة.', audioId: 'hs.hint.reveal', revealSquare: true, highlight: [hidden] },
+      { textAr: 'انظر إلى اللوحة كاملة.', audioId: 'hs.hint.reveal', revealSquare: true, highlight: [hidden] },
     ],
     explainAr: `العدد ${ar(hidden)}.`,
     solutionPath: [anchorCell, hidden],
@@ -140,7 +146,20 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
   const variant: HundredSquareVariant = step === 10 ? 'ten_more_less' : 'one_more_less';
   const ctx: StepContext = { base, step, direction: more ? 'more' : 'less' };
   const representation = mode === 'move' ? 'concrete' : showSquare ? 'pictorial' : 'abstract';
-  const promptAr = mode === 'move' ? `الكنز عند ${stepWord} ${dirWord} من ${ar(base)}.` : `${stepWord} ${dirWord} من ${ar(base)}؟`;
+  // الصيغة المنطوقة فعلٌ أولًا وخطوة واحدة؛ والعرض البصري بطاقات: العدد ← العملية ← ؟
+  const opText = `${stepWord} ${dirWord}`;
+  const promptAr = mode === 'move' ? `أنت على ${ar(base)}. اذهب إلى ${opText}.` : `ما العدد؟ ${opText} من ${ar(base)}.`;
+  const promptParts: GeneratedQuestion['promptParts'] =
+    mode === 'move'
+      ? [
+          { kind: 'text', textAr: 'اذهب إلى' },
+          { kind: 'op', textAr: opText },
+        ]
+      : [
+          { kind: 'number', value: base, tone: 'start' },
+          { kind: 'op', textAr: opText },
+          { kind: 'number', value: 0, tone: 'unknown' },
+        ];
   const arrow = { from: base, to: expected, labelAr: `${more ? '+' : '−'}${ar(step)}` };
   // حدود الصف: الخطوة قد تنقل إلى صف جديد، وهذا يُقال صراحة
   const boundary =
@@ -158,7 +177,7 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
           { textAr: 'الكنز هنا.', audioId: 'hs.hint.here', highlight: [expected] },
         ]
       : [
-          { textAr: `ابحث عن ${ar(base)} في الخريطة.`, audioId: '', highlight: [base], revealSquare: true },
+          { textAr: `ابحث عن ${ar(base)} في اللوحة.`, audioId: '', highlight: [base], revealSquare: true },
           { textAr: boundary ?? `${moveWord} ${dirWord} = ${stepWord} ${dirWord}.`, audioId: '', highlight: [base, expected], arrow, revealSquare: true },
           { textAr: `${ar(base)} و${stepWord} ${dirWord}: ${ar(expected)}.`, audioId: '', highlight: [expected], revealSquare: true },
         ];
@@ -171,6 +190,7 @@ function moreLess(seed: number, step: 1 | 10, mode: InputMode, showSquare: boole
     seed,
     representation,
     promptAr,
+    promptParts,
     audioId: '',
     square: mode === 'move' ? square({ showAll: true, start: base }) : showSquare ? square({ showAll: true, highlight: [base] }) : undefined,
     inputMode: mode,
@@ -198,6 +218,12 @@ function betweenDecades(seed: number): GeneratedQuestion {
     seed,
     representation: 'pictorial',
     promptAr: `انقر على عدد بين ${ar(low)} و${ar(high)}.`,
+    promptParts: [
+      { kind: 'text', textAr: 'انقر على عدد بين' },
+      { kind: 'number', value: low, tone: 'start' },
+      { kind: 'text', textAr: 'و' },
+      { kind: 'number', value: high, tone: 'start' },
+    ],
     audioId: '',
     square: square({ showAll: true, highlight: [low, high], clickable: true }),
     inputMode: 'cell',
@@ -228,7 +254,15 @@ function midpoint(seed: number): GeneratedQuestion {
     variant: 'midpoint',
     seed,
     representation: 'pictorial',
-    promptAr: `انقر على منتصف ${ar(low)} و${ar(high)}.`,
+    promptAr: `انقر على نقطة المنتصف بين ${ar(low)} و${ar(high)}.`,
+    promptParts: [
+      { kind: 'text', textAr: 'انقر على' },
+      { kind: 'op', textAr: 'نقطة المنتصف' },
+      { kind: 'text', textAr: 'بين' },
+      { kind: 'number', value: low, tone: 'start' },
+      { kind: 'text', textAr: 'و' },
+      { kind: 'number', value: high, tone: 'start' },
+    ],
     audioId: '',
     square: square({ showAll: true, highlight: [low, high], clickable: true }),
     inputMode: 'cell',
@@ -258,7 +292,12 @@ function locate(seed: number): GeneratedQuestion {
     variant: 'locate',
     seed,
     representation: 'pictorial',
-    promptAr: `الكنز عند ${ar(target)}. انقر عليه.`,
+    promptAr: `أين ${ar(target)}؟ انقر عليه.`,
+    promptParts: [
+      { kind: 'text', textAr: 'أين' },
+      { kind: 'number', value: target, tone: 'start' },
+      { kind: 'text', textAr: '؟ انقر عليه.' },
+    ],
     audioId: '',
     square: square({ showAll: true, clickable: true }),
     inputMode: 'cell',

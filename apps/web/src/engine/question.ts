@@ -42,6 +42,15 @@ export interface Evaluation {
   feedbackAr: string;
 }
 
+/**
+ * جزء من العرض البصري للسؤال: نص قصير، أو عدد كبير في بطاقة، أو عملية (مثل "عشرة أكثر") في بطاقة بأيقونة اختيارية.
+ * الطفل يرى الأعداد والعملية كبطاقات واضحة بدل جملة طويلة، والجملة الكاملة تُنطق وتُكتب في فقاعة الرفيق.
+ */
+export type PromptPart =
+  | { kind: 'text'; textAr: string }
+  | { kind: 'number'; value: number; tone?: 'start' | 'unknown' }
+  | { kind: 'op'; textAr: string; iconAr?: string };
+
 export interface GeneratedQuestion {
   id: string;
   skillCode: string;
@@ -49,8 +58,10 @@ export interface GeneratedQuestion {
   variant: string;
   seed: number;
   representation: RepresentationType;
-  /** جملة السؤال القصيرة (حتى ثماني كلمات) */
+  /** جملة السؤال الكاملة القصيرة (حتى ثماني كلمات) كما تُنطق */
   promptAr: string;
+  /** العرض البصري للسؤال بالبطاقات */
+  promptParts: PromptPart[];
   /** معرّف ملف الصوت المقابل للنص؛ فارغ إن كان النص متغيرًا */
   audioId: string;
   square?: SquareView;

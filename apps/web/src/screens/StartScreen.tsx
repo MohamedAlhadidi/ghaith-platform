@@ -29,7 +29,7 @@ export function StartScreen() {
     return onUpdateAvailable(setUpdateReady);
   }, []);
 
-  const welcome = `أهلًا ${profile.name}! ${resumable ? 'نكمل من حيث توقفنا؟' : 'جاهز للخريطة؟'}`;
+  const welcome = `أهلًا ${profile.name}! ${resumable ? 'نكمل من حيث توقفنا؟' : 'جاهز للكنز؟'}`;
 
   const start = () => {
     primeAudio();
@@ -47,7 +47,7 @@ export function StartScreen() {
       </div>
       <div className="button-row">
         <button type="button" className="big-button" onClick={start} autoFocus data-testid="start">
-          ▶ {resumable ? 'نكمل' : 'ابدأ'}
+          {resumable ? 'نكمل' : 'ابدأ'}
         </button>
       </div>
       <div className="button-row">

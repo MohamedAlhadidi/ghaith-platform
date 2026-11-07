@@ -35,7 +35,7 @@ export interface SessionSummary {
   insights: SessionInsight[];
 }
 
-const REP_AR: Record<RepresentationType, string> = { concrete: 'بالحركة على الخريطة', pictorial: 'بالخريطة', abstract: 'بلا خريطة' };
+const REP_AR: Record<RepresentationType, string> = { concrete: 'بالحركة على اللوحة', pictorial: 'باللوحة', abstract: 'بلا لوحة' };
 
 function pct(a: number, b: number): string {
   return b === 0 ? '—' : `${ar(Math.round((100 * a) / b))}٪`;

@@ -1,4 +1,4 @@
-// خريطة المائة التفاعلية: 10×10 تُقرأ من اليمين إلى اليسار كما في الكتاب، بأرقام عربية هندية
+// لوحة المائة التفاعلية: 10×10 تُقرأ من اليمين إلى اليسار كما في الكتاب، بأرقام عربية هندية
 // فوقها طبقة اللعبة: ضباب على الخانات المخفية، الأفاتار في خانته، الكنز، وسهم الاتجاه
 import { useEffect, useRef } from 'react';
 import { toArabicIndic } from '../engine/answers';
@@ -17,7 +17,7 @@ export interface HundredSquareProps {
   /** خانة مركّزة للوحة المفاتيح (الأسهم) */
   focusedCell?: number;
   onFocusMove?: (n: number) => void;
-  /** موضع الأفاتار على الخريطة وحالته وشكله */
+  /** موضع الأفاتار على اللوحة وحالته وشكله */
   avatarAt?: number;
   avatarState?: AvatarState;
   avatarLook?: AvatarLook;
@@ -76,7 +76,7 @@ export function HundredSquare({ view, extraHighlight = [], arrow, marked, onCell
   return (
     <div className="hs-wrap">
       <div className="hs-map">
-        <div className="hs-grid" dir="rtl" ref={ref} tabIndex={view.clickable ? 0 : -1} role={view.clickable ? 'grid' : 'img'} aria-label="خريطة المائة">
+        <div className="hs-grid" dir="rtl" ref={ref} tabIndex={view.clickable ? 0 : -1} role={view.clickable ? 'grid' : 'img'} aria-label="لوحة المائة">
           {cells.map((n) => {
             const isHidden = view.hiddenCell === n;
             const visible = view.showAll || reveal.has(n) || isHidden;
@@ -124,7 +124,7 @@ export function HundredSquare({ view, extraHighlight = [], arrow, marked, onCell
       </div>
       {arrow && (
         <div className="hs-arrow-label" aria-hidden="true">
-          {toArabicIndic(arrow.from)} ← {arrow.labelAr} ← {toArabicIndic(arrow.to)}
+          {toArabicIndic(arrow.from)} ← <bdi dir="ltr">{arrow.labelAr}</bdi> ← {toArabicIndic(arrow.to)}
         </div>
       )}
     </div>

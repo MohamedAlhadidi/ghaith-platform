@@ -22,8 +22,8 @@ export type Situation =
   | 'wrong_show' // استُنفدت المحاولات: سأريك الطريق
   | 'hesitation' // تردد طويل
   | 'auto_hint' // تلميح تلقائي بعد خطأين متشابهين
-  | 'easier' // سؤال أسهل بالخريطة
-  | 'harder' // سؤال بلا خريطة
+  | 'easier' // سؤال أسهل باللوحة
+  | 'harder' // سؤال بلا لوحة
   | 'fatigue' // اقتراح التوقف
   | 'resume' // عند استئناف جلسة منقطعة
   | 'paused'
@@ -41,7 +41,7 @@ interface Line {
 export const SCRIPT: Record<Situation, Line[]> = {
   welcome: [
     { id: 'c.welcome.1', textAr: 'أهلًا {name}! أنا رفيق.' },
-    { id: 'c.welcome.2', textAr: 'أهلًا {name}! جاهز للخريطة؟' },
+    { id: 'c.welcome.2', textAr: 'أهلًا {name}! جاهز للكنز؟' },
   ],
   goal: [{ id: 'c.goal.1', textAr: 'اليوم نبحث عن الكنز بالقفزة والخطوة.' }],
   baseline_intro: [{ id: 'c.baseline.intro', textAr: 'أولًا: ثمانية أسئلة وحدك. لا تلميح.' }],
@@ -50,7 +50,7 @@ export const SCRIPT: Record<Situation, Line[]> = {
     { id: 'c.baseline.ack.2', textAr: 'سجّلت. التالي.' },
   ],
   baseline_done: [{ id: 'c.baseline.done', textAr: 'انتهينا. الآن نتعلم معًا.' }],
-  model_intro: [{ id: 'c.model.intro', textAr: 'انظر إلى الخريطة أولًا.' }],
+  model_intro: [{ id: 'c.model.intro', textAr: 'انظر إلى لوحة المائة أولًا.' }],
   worked_intro: [{ id: 'c.worked.intro', textAr: 'شاهد: أنا أحل، وأنت تنظر.' }],
   worked_done: [{ id: 'c.worked.done', textAr: 'رأيت؟ الآن أنت.' }],
   guided_intro: [{ id: 'c.guided.intro', textAr: 'نلعب معًا. التلميح هنا إذا احتجت.' }],
@@ -75,8 +75,8 @@ export const SCRIPT: Record<Situation, Line[]> = {
     { id: 'c.hesitation.2', textAr: 'خذ وقتك. المصباح يساعد.' },
   ],
   auto_hint: [{ id: 'c.autohint.1', textAr: 'انتبه هنا. هذا تلميح.' }],
-  easier: [{ id: 'c.easier.1', textAr: 'نجرّب على الخريطة.' }],
-  harder: [{ id: 'c.harder.1', textAr: 'رائع! جرّب بلا خريطة.' }],
+  easier: [{ id: 'c.easier.1', textAr: 'نجرّب على اللوحة.' }],
+  harder: [{ id: 'c.harder.1', textAr: 'رائع! جرّب بلا لوحة.' }],
   fatigue: [{ id: 'c.fatigue.1', textAr: 'عملت كثيرًا. نكمل غدًا؟' }],
   resume: [{ id: 'c.resume.1', textAr: 'أهلًا من جديد! نكمل من هنا.' }],
   paused: [{ id: 'c.paused.1', textAr: 'حفظت مكانك. إلى اللقاء!' }],
